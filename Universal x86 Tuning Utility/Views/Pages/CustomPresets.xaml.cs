@@ -1128,25 +1128,33 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (cbxBoost.SelectedIndex == 2) commandValues = commandValues + $"--max-performance ";
                 }
 
-                if (Family.FAM == Family.RyzenFamily.DragonRange)
+                if (Family.FAM == Family.RyzenFamily.DragonRange || Family.FAM == Family.RyzenFamily.FireRange || Family.FAM == Family.RyzenFamily.StrixHalo)
                 {
-                    if (cbCCD1Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD1Core1.Value & 0xFFFF)} ";
-                    if (cbCCD1Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD1Core2.Value & 0xFFFF)} ";
-                    if (cbCCD1Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD1Core3.Value & 0xFFFF)} ";
-                    if (cbCCD1Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD1Core4.Value & 0xFFFF)} ";
-                    if (cbCCD1Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD1Core5.Value & 0xFFFF)} ";
-                    if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
-                    if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
-                    if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                    if (cbCCD1Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 0, (int)nudCCD1Core1.Value)} ";
+                    if (cbCCD1Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 1, (int)nudCCD1Core2.Value)} ";
+                    if (cbCCD1Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 2, (int)nudCCD1Core3.Value)} ";
+                    if (cbCCD1Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 3, (int)nudCCD1Core4.Value)} ";
+                    if (cbCCD1Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 4, (int)nudCCD1Core5.Value)} ";
+                    if (cbCCD1Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 5, (int)nudCCD1Core6.Value)} ";
+                    if (cbCCD1Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 6, (int)nudCCD1Core7.Value)} ";
+                    if (cbCCD1Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 7, (int)nudCCD1Core8.Value)} ";
+                    if (cbCCD1Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 8, (int)nudCCD1Core9.Value)} ";
+                    if (cbCCD1Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 9, (int)nudCCD1Core10.Value)} ";
+                    if (cbCCD1Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 10, (int)nudCCD1Core11.Value)} ";
+                    if (cbCCD1Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 11, (int)nudCCD1Core12.Value)} ";
 
-                    if (cbCCD2Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD2Core1.Value & 0xFFFF)} ";
-                    if (cbCCD2Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD2Core2.Value & 0xFFFF)} ";
-                    if (cbCCD2Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD2Core3.Value & 0xFFFF)} ";
-                    if (cbCCD2Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD2Core4.Value & 0xFFFF)} ";
-                    if (cbCCD2Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD2Core5.Value & 0xFFFF)} ";
-                    if (cbCCD2Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD2Core6.Value & 0xFFFF)} ";
-                    if (cbCCD2Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD2Core7.Value & 0xFFFF)} ";
-                    if (cbCCD2Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD2Core8.Value & 0xFFFF)} ";
+                    if (cbCCD2Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 0, (int)nudCCD2Core1.Value)} ";
+                    if (cbCCD2Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 1, (int)nudCCD2Core2.Value)} ";
+                    if (cbCCD2Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 2, (int)nudCCD2Core3.Value)} ";
+                    if (cbCCD2Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 3, (int)nudCCD2Core4.Value)} ";
+                    if (cbCCD2Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 4, (int)nudCCD2Core5.Value)} ";
+                    if (cbCCD2Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 5, (int)nudCCD2Core6.Value)} ";
+                    if (cbCCD2Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 6, (int)nudCCD2Core7.Value)} ";
+                    if (cbCCD2Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 7, (int)nudCCD2Core8.Value)} ";
+                    if (cbCCD2Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 8, (int)nudCCD2Core9.Value)} ";
+                    if (cbCCD2Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 9, (int)nudCCD2Core10.Value)} ";
+                    if (cbCCD2Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 10, (int)nudCCD2Core11.Value)} ";
+                    if (cbCCD2Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 11, (int)nudCCD2Core12.Value)} ";
                 }
                 else
                 {
@@ -1158,6 +1166,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={(5 << 20) | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
                     if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={(6 << 20) | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
                     if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                    if (cbCCD1Core9.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core9.Value & 0xFFFF)} ";
+                    if (cbCCD1Core10.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core10.Value & 0xFFFF)} ";
+                    if (cbCCD1Core11.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core11.Value & 0xFFFF)} ";
+                    if (cbCCD1Core12.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core12.Value & 0xFFFF)} ";
                 }
 
                 if (tsAmdOC.IsChecked == true)
@@ -1204,23 +1216,31 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (nudGfxCO.Value < 0) commandValues = commandValues + $"--set-cogfx={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudGfxCO.Value))} ";
                 }
 
-                if (cbCCD1Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD1Core1.Value & 0xFFFF)} ";
-                if (cbCCD1Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD1Core2.Value & 0xFFFF)} ";
-                if (cbCCD1Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD1Core3.Value & 0xFFFF)} ";
-                if (cbCCD1Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD1Core4.Value & 0xFFFF)} ";
-                if (cbCCD1Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD1Core5.Value & 0xFFFF)} ";
-                if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
-                if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
-                if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                if (cbCCD1Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 0, (int)nudCCD1Core1.Value)} ";
+                if (cbCCD1Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 1, (int)nudCCD1Core2.Value)} ";
+                if (cbCCD1Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 2, (int)nudCCD1Core3.Value)} ";
+                if (cbCCD1Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 3, (int)nudCCD1Core4.Value)} ";
+                if (cbCCD1Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 4, (int)nudCCD1Core5.Value)} ";
+                if (cbCCD1Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 5, (int)nudCCD1Core6.Value)} ";
+                if (cbCCD1Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 6, (int)nudCCD1Core7.Value)} ";
+                if (cbCCD1Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 7, (int)nudCCD1Core8.Value)} ";
+                if (cbCCD1Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 8, (int)nudCCD1Core9.Value)} ";
+                if (cbCCD1Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 9, (int)nudCCD1Core10.Value)} ";
+                if (cbCCD1Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 10, (int)nudCCD1Core11.Value)} ";
+                if (cbCCD1Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 11, (int)nudCCD1Core12.Value)} ";
 
-                if (cbCCD2Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD2Core1.Value & 0xFFFF)} ";
-                if (cbCCD2Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD2Core2.Value & 0xFFFF)} ";
-                if (cbCCD2Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD2Core3.Value & 0xFFFF)} ";
-                if (cbCCD2Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD2Core4.Value & 0xFFFF)} ";
-                if (cbCCD2Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD2Core5.Value & 0xFFFF)} ";
-                if (cbCCD2Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD2Core6.Value & 0xFFFF)} ";
-                if (cbCCD2Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD2Core7.Value & 0xFFFF)} ";
-                if (cbCCD2Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD2Core8.Value & 0xFFFF)} ";
+                if (cbCCD2Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 0, (int)nudCCD2Core1.Value)} ";
+                if (cbCCD2Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 1, (int)nudCCD2Core2.Value)} ";
+                if (cbCCD2Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 2, (int)nudCCD2Core3.Value)} ";
+                if (cbCCD2Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 3, (int)nudCCD2Core4.Value)} ";
+                if (cbCCD2Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 4, (int)nudCCD2Core5.Value)} ";
+                if (cbCCD2Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 5, (int)nudCCD2Core6.Value)} ";
+                if (cbCCD2Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 6, (int)nudCCD2Core7.Value)} ";
+                if (cbCCD2Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 7, (int)nudCCD2Core8.Value)} ";
+                if (cbCCD2Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 8, (int)nudCCD2Core9.Value)} ";
+                if (cbCCD2Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 9, (int)nudCCD2Core10.Value)} ";
+                if (cbCCD2Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 10, (int)nudCCD2Core11.Value)} ";
+                if (cbCCD2Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 11, (int)nudCCD2Core12.Value)} ";
 
                 if (tsAmdOC.IsChecked == true)
                 {
@@ -1291,6 +1311,20 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
             return commandValues;
         }
+
+        private static uint BuildCoperArg(int ccd, int core, int offset)
+        {
+            int magnitude = Math.Min(Math.Abs(offset), 0xFFFFF);
+
+            uint encoded20 =
+                offset < 0
+                    ? (uint)((0x100000 - magnitude) & 0xFFFFF)
+                    : (uint)(magnitude & 0xFFFFF);
+
+            uint prefix = (uint)((((ccd << 4) | (0 % 1 & 15)) << 4 | (core % 8 & 15)) << 20);
+            return prefix | encoded20;
+        }
+
 
         public bool IsScrollBarVisible(ScrollViewer scrollViewer)
         {
