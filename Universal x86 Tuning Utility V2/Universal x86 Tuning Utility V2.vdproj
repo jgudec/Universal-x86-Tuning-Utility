@@ -33,7 +33,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\Universal x86 Tuning Utility.msi"
+        "OutputFilename" = "8:Debug\\Universal x86 Tuning Utility V2.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -52,15 +52,15 @@
             "ComponentsUrl" = "8:"
                 "Items"
                 {
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.CoreRuntime.10.0.x64"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.CoreRuntime.8.0.x64"
                     {
-                    "Name" = "8:.NET Runtime 10.0.3 (x64)"
-                    "ProductCode" = "8:Microsoft.NetCore.CoreRuntime.10.0.x64"
+                    "Name" = "8:.NET Runtime 8.0.5 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.CoreRuntime.8.0.x64"
                     }
-                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.10.0.x64"
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:Microsoft.NetCore.DesktopRuntime.8.0.x64"
                     {
-                    "Name" = "8:.NET Desktop Runtime 10.0.3 (x64)"
-                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.10.0.x64"
+                    "Name" = "8:.NET Desktop Runtime 8.0.5 (x64)"
+                    "ProductCode" = "8:Microsoft.NetCore.DesktopRuntime.8.0.x64"
                     }
                 }
             }
@@ -127,6 +127,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
+                "FrameworkVersion" = "8:10.0 "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -213,8 +214,8 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Universal x86 Tuning Utility"
-        "ProductCode" = "8:{9F0EB78B-2ED1-4A0F-A09D-7CC182CD37A7}"
-        "PackageCode" = "8:{673212F1-65B8-4B85-8BD1-3B3FBFAC740F}"
+        "ProductCode" = "8:{F4BD515A-FC29-4F15-92B6-024E3C4F51C5}"
+        "PackageCode" = "8:{8B2BF5B9-BE88-495F-BC76-0F68B0A932E2}"
         "UpgradeCode" = "8:{300E743A-4C69-440D-9425-14C446AB2658}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
