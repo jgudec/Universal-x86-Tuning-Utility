@@ -67,7 +67,6 @@ namespace RyzenSmu
                 ("vrmsoc-current",true , 0x21),
                 ("vrmsocmax-current",true , 0x23),
                 ("prochot-deassertion-ramp",true , 0x25),
-                ("pbo-scalar",false , 0x68),
                 ("power-saving",true , 0x19),
                 ("max-performance",true , 0x18),
                 ("oc-clk",false , 0x7d),
@@ -87,6 +86,9 @@ namespace RyzenSmu
                 ("min-vcn",true, 0x4d),
                 ("max-lclk",true, 0x4e),
                 ("min-lclk",true, 0x4f),
+                ("set-coall",false , 0x59),
+                ("set-coper",false , 0x58),
+                ("pbo-scalar",false , 0x7C)
             };
         }
 
