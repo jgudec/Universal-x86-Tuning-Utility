@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Universal_x86_Tuning_Utility.Scripts.Misc;
 
 namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
 {
@@ -106,7 +107,12 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
                 IntPtr.Zero);
 
                 if (raw == IntPtr.Zero || raw.ToInt64() == -1)
+                {
+                    ToastNotification.ShowToastNotification("PawnIO Load Failed", "Could not open device handle. Is PawnIO installed and up to date?");
+
                     return new PawnIo(null);
+                }
+                    
                 else DevicePath = OldDevicePath;
             }
 
