@@ -54,41 +54,85 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true, 0x1a), // Use MP1 address
-                ("stapm-time",true , 0x1e), 
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x06),
+                ("stapm-limit",true, 0x1a),
+                ("stapm-limit",false, 0x2e),
+                ("stapm-time",true , 0x1e),
+                ("stapm-time",false , 0x32),
                 ("fast-limit",true , 0x1b),
+                ("fast-limit",false , 0x30),
                 ("slow-limit",true , 0x1c),
+                ("slow-limit",false , 0x2f),
                 ("slow-time",true , 0x1d),
+                ("slow-time",false , 0x31),
                 ("tctl-temp",true , 0x1f),
-                ("cHTC-temp",false , 0x56), // Use RSMU address
+                ("tctl-temp",false , 0x33),
+                ("cHTC-temp",false , 0x56),
                 ("vrm-current",true , 0x20),
+                ("vrm-current",false , 0x34),
                 ("vrmmax-current",true , 0x22),
+                ("vrmmax-current",false , 0x36),
                 ("vrmsoc-current",true , 0x21),
+                ("vrmsoc-current",false , 0x35),
                 ("vrmsocmax-current",true , 0x23),
-                ("prochot-deassertion-ramp",true , 0x25),
+                ("vrmsocmax-current",false , 0x37),
+                ("psi0-current",true , 0x24),
+                ("psi0-current",false , 0x38),
+                ("psi0soc-current",true , 0x25),
+                ("psi0soc-current",false , 0x39),
+                ("prochot-deassertion-ramp",true , 0x26),
+                ("prochot-deassertion-ramp",false , 0x3a),
                 ("power-saving",true , 0x19),
                 ("max-performance",true , 0x18),
+                ("enable-oc",true , 0x58),
+                ("disable-oc",true , 0x3f),
                 ("oc-clk",false , 0x7d),
                 ("per-core-oc-clk",false , 0x7e),
-                ("oc-volt",false , 0x7f),
-                ("enable-oc",false , 0x69),
-                ("disable-oc",false , 0x6a),
+                ("oc-clk",true , 0x59),
+                ("per-core-oc-clk",true , 0x5a),
+                ("oc-clk",true , 0x41),
+                ("oc-volt",true , 0x5b),
+                ("oc-volt",false , 0x7c),
+                ("oc-volt",true , 0x40),
+                ("set-gpuclockoverdrive-byvid",true , 0x3d),
+                ("set-gpuclockoverdrive-byvid",false , 0x61),
+                ("pbo-scalar",true , 0x57),
+                ("pbo-scalar",false , 0x63),
+                ("get-pbo-scalar",false , 0x62),
                 ("max-cpuclk",true, 0x44),
                 ("min-cpuclk",true, 0x45),
                 ("max-gfxclk",true, 0x46),
+                ("max-gfxclk",false, 0x68),
                 ("min-gfxclk",true, 0x47),
+                ("min-gfxclk",false, 0x69),
                 ("max-socclk-frequency",true, 0x48),
+                ("max-socclk-frequency",false, 0x66),
                 ("min-socclk-frequency",true, 0x49),
+                ("min-socclk-frequency",false, 0x67),
                 ("max-fclk-frequency",true, 0x4a),
                 ("min-fclk-frequency",true, 0x4b),
                 ("max-vcn",true, 0x4c),
                 ("min-vcn",true, 0x4d),
                 ("max-lclk",true, 0x4e),
                 ("min-lclk",true, 0x4f),
-                ("set-coall",false , 0x59),
-                ("set-coper",false , 0x58),
-                ("pbo-scalar",false , 0x7C)
+                ("set-coper",false, 0x58),
+                ("set-coall",false, 0x59),
+                ("set-cogfx",false, 0x59),
+                ("setcpu-freqto-ramstate",true , 0x2f),
+                ("stopcpu-freqto-ramstate",true , 0x30),
+                ("stopcpu-freqto-ramstate",true , 0x31),
+                ("set-ulv-vid",true , 0x35),
+                ("set-vddoff-vid",true , 0x3a),
+                ("set-vmin-freq",true , 0x3b),
+                ("get-sustained-power-and-thm-limit",true , 0x43),
+                ("get-sustained-power-and-thm-limit",false , 0x65),
+                ("get-pbo-fused-power-limit",false , 0x7F),
+                ("get-pbo-fused-slow-limit",false , 0x80),
+                ("get-pbo-fused-fast-limit",false , 0x81),
+                ("get-pbo-fused-apu-slow-limit",false , 0x82),
+                ("get-pbo-fused-vrmtdc-limit",false , 0x83),
+                ("get-pbo-fused-vrmsoc-current",false , 0x84)
             };
         }
 
@@ -104,42 +148,74 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true , 0x14), // Use MP1 address
-                //("stapm-limit",false , 0x31), // Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit",true , 0x14),
+                ("stapm-limit",false , 0x31),
                 ("ppt-limit",false , 0x33),
                 ("stapm-time",true , 0x18),
+                ("stapm-time",false , 0x36),
                 ("fast-limit",true , 0x15),
+                ("fast-limit",false , 0x32),
                 ("slow-limit",true , 0x16),
+                ("slow-limit",false , 0x33),
                 ("slow-time",true , 0x17),
+                ("slow-time",false , 0x35),
                 ("tctl-temp",true , 0x19),
                 ("cHTC-temp",false , 0x37),
                 ("apu-skin-temp",true , 0x38),
+                ("apu-skin-temp",false , 0x91),
+                ("dgpu-skin-temp",true , 0x39),
+                ("dgpu-skin-temp",false , 0x92),
                 ("vrm-current",true , 0x1a),
+                ("vrm-current",false , 0x38),
                 ("vrmmax-current",true , 0x1c),
+                ("vrmmax-current",false , 0x3a),
                 ("vrmsoc-current",true , 0x1b),
+                ("vrmsoc-current",false , 0x39),
                 ("vrmsocmax-current",true , 0x1d),
+                ("vrmsocmax-current",false , 0x3b),
+                ("psi0-current",true , 0x1e),
+                ("psi0-current",false , 0x3c),
+                ("psi0soc-current",true , 0x1f),
+                ("psi0soc-current",false , 0x3d),
                 ("prochot-deassertion-ramp",true , 0x20),
-                ("gfx-clk",false , 0x89),
-                ("dgpu-skin-temp",true , 0x37),
+                ("prochot-deassertion-ramp",false , 0x3e),
+                ("skin-temp-limit",true , 0x53),
+                ("apu-slow-limit",true , 0x21),
+                ("apu-slow-limit",false , 0x34),
                 ("power-saving",true , 0x12),
                 ("max-performance",true , 0x11),
-                ("pbo-scalar",false , 0x3F),
-                ("oc-clk",false , 0x19),
-                ("oc-clk",true , 0x31),
-                ("per-core-oc-clk",false , 0x1a),
-                ("per-core-oc-clk",true , 0x32),
-                ("oc-volt",false , 0x1b),
-                ("oc-volt",true , 0x33),
-                ("set-coall",true , 0x55),
-                ("set-coall",false , 0xB1),
-                ("set-coper",true , 0x54),
-                ("set-cogfx",true , 0x64),
-                ("set-cogfx",false , 0x57),
                 ("enable-oc",false , 0x17),
                 ("enable-oc",true , 0x2f),
                 ("disable-oc",false , 0x18),
-                ("disable-oc",true , 0x30)
+                ("disable-oc",true , 0x30),
+                ("oc-clk",true , 0x31),
+                ("oc-clk",false , 0x19),
+                ("per-core-oc-clk",true , 0x32),
+                ("per-core-oc-clk",false , 0x1a),
+                ("oc-volt",true , 0x33),
+                ("oc-volt",false , 0x1b),
+                ("set-gpuclockoverdrive-byvid",true , 0x34),
+                ("gfx-clk",false , 0x89),
+                ("gfx-clk",false , 0x1c),
+                ("pbo-scalar",true , 0x49),
+                ("pbo-scalar",false , 0x3f),
+                ("get-pbo-scalar",false , 0x0f),
+                ("set-cogfx",false , 0x53),
+                ("set-coper",true , 0x54),
+                ("set-coper",false , 0x52),
+                ("set-coall",true , 0x55),
+                ("set-coall",false , 0xB1),
+                ("get-coper-options",false , 0xC3),
+                ("get-cogfx-options",false , 0xC6),
+                ("get-sustained-power-and-thm-limit",true , 0x5b),
+                ("get-pbo-fused-power-limit",false , 0x11),
+                ("get-pbo-fused-slow-limit",false , 0x12),
+                ("get-pbo-fused-fast-limit",false , 0x13),
+                ("get-pbo-fused-apu-slow-limit",false , 0x14),
+                ("get-pbo-fused-vrmtdc-limit",false , 0x15),
+                ("get-pbo-fused-vrmsoc-current",false , 0x16)
             };
         }
 
@@ -168,36 +244,68 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit", true, 0x14), // Use MP1 address
-                ("stapm-limit", false, 0x31),// Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit", true, 0x14),
+                ("stapm-limit", false, 0x31),
                 ("stapm-time", true, 0x18),
+                ("stapm-time", false, 0x36),
                 ("fast-limit", true, 0x15),
                 ("fast-limit", false, 0x32),
                 ("slow-limit", true, 0x16),
                 ("slow-limit", false, 0x33),
                 ("slow-time", true, 0x17),
+                ("slow-time", false, 0x35),
                 ("tctl-temp", true, 0x19),
+                ("cHTC-temp", true, 0x63),
                 ("cHTC-temp", false, 0x37),
-                ("apu-skin-temp", true, 0x33),
                 ("vrm-current", true, 0x1a),
+                ("vrm-current", false, 0x38),
                 ("vrmmax-current", true, 0x1c),
+                ("vrmmax-current", false, 0x3a),
                 ("vrmsoc-current", true, 0x1b),
-                ("vrmsocmax-current", true ,0x1d),
-                ("prochot-deassertion-ramp", true, 0x1f),
-                ("gfx-clk", false, 0x89),
-                ("dgpu-skin-temp", true, 0x32),
-                ("power-saving", true, 0x12),
+                ("vrmsoc-current", false, 0x39),
+                ("vrmsocmax-current", true, 0x1d),
+                ("vrmsocmax-current", false, 0x3b),
+                ("psi0-current", true, 0x1e),
+                ("psi0-current", false, 0x3c),
+                ("psi0soc-current", true, 0x1f),
+                ("psi0soc-current", false, 0x3d),
+                ("psi3cpu_current", true, 0x20),
+                ("psi3gfx_current", true, 0x21),
+                ("prochot-deassertion-ramp", true, 0x22),
+                ("skin-temp-limit", true, 0x4a),
+                ("apu-slow-limit", true, 0x23),
+                ("apu-slow-limit", false, 0x34),
+                ("apu-skin-temp", true, 0x33),
+                ("apu-skin-temp", false, 0x91),
+                ("dgpu-skin-temp", true, 0x34),
+                ("dgpu-skin-temp", false, 0x92),
                 ("max-performance", true, 0x11),
-                ("pbo-scalar", false, 0x3E),
-                ("oc-clk",  false, 0x19),
+                ("power-saving", true, 0x12),
+                ("enable-oc", false, 0x17),
+                ("disable-oc", false, 0x18),
+                ("oc-clk", false, 0x19),
                 ("per-core-oc-clk", false, 0x1a),
-                ("set-coall",   true, 0x4c),
-                ("set-coall",   false, 0x5d),
-                ("set-coper",   true, 0x4b),
-                ("set-cogfx",   false, 0xb7),
-                ("enable-oc",   false, 0x17),
-                ("disable-oc",  false, 0x18)
+                ("oc-volt", false, 0x1b),
+                ("gfx-clk", false, 0x89),
+                ("gfx-clk", false, 0x1c),
+                ("pbo-scalar", false, 0x3e),
+                ("get-pbo-scalar", false, 0x0f),
+                ("set-cogfx", false, 0xb7),
+                ("set-coper", true, 0x4b),
+                ("set-coper", false, 0x53),
+                ("set-coall", true, 0x4c),
+                ("set-coall", false, 0x5d),
+                ("get-coper-options", false, 0xE1),
+                ("get-sustained-power-and-thm-limit", true, 0x5f),
+                ("get-pbo-fused-power-limit", false, 0x11),
+                ("get-pbo-fused-slow-limit", false, 0x12),
+                ("get-pbo-fused-fast-limit", false, 0x13),
+                ("get-pbo-fused-apu-slow-limit", false, 0x14),
+                ("get-pbo-fused-vrmtdc-limit", false, 0x15),
+                ("get-pbo-fused-vrmsoc-current", false, 0x16),
+                ("get-pbo-fused-tctl-temp", false, 0xE5)
             };
         }
 
@@ -213,9 +321,10 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true, 0x14), // Use MP1 address
-                //("stapm-limit",false , 0x31), // Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit",true, 0x14),
+                ("stapm-limit",false , 0x31),
                 ("stapm-time",true , 0x18),
                 ("fast-limit",true , 0x15),
                 ("slow-limit",true , 0x16),
@@ -231,12 +340,16 @@ namespace RyzenSmu
                 ("vrmgfxmax-current",true , 0x1f),
                 ("prochot-deassertion-ramp",true , 0x22),
                 ("gfx-clk",false , 0x89),
+                ("gfx-clk",false , 0x1c),
                 ("power-saving",true , 0x12),
                 ("max-performance",true , 0x11),
                 ("set-coall",true , 0x4c),
                 ("set-coall",false , 0x5d),
                 ("set-coper",true , 0x4b),
-                ("set-cogfx",false , 0xb7)
+                ("set-cogfx",false , 0xb7),
+                ("get-sustained-power-and-thm-limit",true , 0x54),
+                ("skin-temp-limit",true , 0x4a),
+                ("apu-slow-limit",true , 0x23)
             };
         }
 
@@ -252,18 +365,24 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("ppt-limit",false, 0x64), // Use RSMU address
+                ("ppt-limit",false, 0x64),
+                ("ppt-limit",true, 0x31),
                 ("tdc-limit",false , 0x65),
                 ("edc-limit",false , 0x66),
                 ("tctl-temp",false , 0x68),
                 ("pbo-scalar",false , 0x6a),
                 ("oc-clk", false, 0x6c),
+                ("oc-clk", true, 0x39),
                 ("per-core-oc-clk",false , 0x6d),
                 ("oc-volt", false, 0x6e),
+                ("oc-volt", true, 0x38),
                 ("enable-oc",true , 0x23),
                 ("enable-oc",false , 0x6b),
                 ("disable-oc",true , 0x24),
+                ("get-sustained-power-and-thm-limit",true , 0x36),
+                ("setcpu-freqto-ramstate",true , 0x23),
+                ("stopcpu-freqto-ramstate",true , 0x24),
+                ("stopcpu-freqto-ramstate",true , 0x25)
             };
         }
 
@@ -279,9 +398,10 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("ppt-limit",true, 0x3D), // Use MP1 address
-                ("ppt-limit",false, 0x53), // Use RSMU address
+                ("enable-feature",true, 0x03),
+                ("disable-feature",true, 0x04),
+                ("ppt-limit",true, 0x3D),
+                ("ppt-limit",false, 0x53),
                 ("tdc-limit",true , 0x3B),
                 ("tdc-limit",false , 0x54),
                 ("edc-limit",true , 0x3c),
@@ -298,11 +418,18 @@ namespace RyzenSmu
                 ("set-coall", true, 0x36),
                 ("set-coall", false, 0xb),
                 ("set-coper", true, 0x35),
+                ("set-coper", false, 0x0a),
                 ("enable-oc",true , 0x24),
                 ("enable-oc",false , 0x5a),
                 ("disable-oc",true , 0x25),
                 ("disable-oc",false , 0x5b),
+                ("set-boost-limit-frequency",true , 0x2b),
+                ("get-pbo-scalar",false , 0x6c),
+                ("get-sustained-power-and-thm-limit",true , 0x23),
+                ("get-overclocking-support",false , 0x6f),
+                ("get-coper-options",false , 0x7c)
             };
+
         }
 
         private static void Socket_AM5_V1()
@@ -317,16 +444,17 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
+                ("enable-feature",true, 0x03), // Use MP1 address
+                ("disable-feature",true, 0x04),
                 ("stapm-limit",true, 0x4f),
                 ("stapm-time",true , 0x53),
                 ("fast-limit",true , 0x3e),
                 ("slow-limit",true , 0x5f),
                 ("slow-time",true , 0x60),
                 ("vrm-current",true , 0x3c),
-                ("vrm-current",false , 0x57),
-                ("ppt-limit",true, 0x3e), // Use MP1 address
-                ("ppt-limit",false, 0x56), // Use RSMU address
+                ("vrm-current",false , 0x57), // Use RSMU address
+                ("ppt-limit",true, 0x3e),
+                ("ppt-limit",false, 0x56),
                 ("tdc-limit",true , 0x3c),
                 ("tdc-limit",false , 0x57),
                 ("edc-limit",true , 0x3d),
@@ -341,6 +469,33 @@ namespace RyzenSmu
                 ("set-coper", false, 0x6),
                 ("enable-oc",false , 0x5d),
                 ("disable-oc",false , 0x5e),
+                ("slow-limit",false , 0xcb),
+                ("skin-temp-limit",true , 0x5e),
+                ("apu-slow-limit",true , 0x60),
+                ("vrmmax-current",true , 0x3d),
+                ("vrmmax-current",false , 0x58),
+                ("cHTC-temp",false , 0x59),
+                ("get-pbo-scalar",false , 0x6d),
+                ("set-cogfx",false , 0xA7),
+                ("set-coall",true , 0x36),
+                ("set-coper",true , 0x35),
+                ("set-boost-limit-frequency",true , 0x2b),
+                ("set-vddoff-vid",true , 0x4b),
+                ("set-fll-btc-enable",true , 0x37),
+                ("get-sustained-power-and-thm-limit",true , 0x23),
+                ("get-overclocking-support",false , 0x6f),
+                ("get-max-cpu-clk",false , 0x6e),
+                ("get-min-gfx-clk",false , 0xCe),
+                ("get-max-gfx-clk",false , 0xCf),
+                ("get-curr-gfx-clk",false , 0xD8),
+                ("disable-prochot",false , 0x5d),
+                ("get-coper-options",false , 0xD5),
+                ("get-cogfx-options",false , 0xD7),
+                ("get-pbo-fused-vrmsoc-current",false , 0xD9),
+                ("get-pbo-fused-vrmtdc-limit",false , 0xDb),
+                ("get-pbo-fused-slow-limit",false , 0xDc),
+                ("get-pbo-fused-apu-slow-limit",false , 0xDa),
+                ("get-pbo-fused-tctl-temp",false , 0xDe)
             };
         }
     }
