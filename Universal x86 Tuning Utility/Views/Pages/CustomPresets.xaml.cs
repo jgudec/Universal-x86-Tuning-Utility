@@ -141,12 +141,6 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 sdAmdCCD1CO.Visibility = sdAmdCO.Visibility;
 
-                if (Family.FAM < Family.RyzenFamily.Renoir)
-                {
-                    sdAmdPowerProfile.Visibility = Visibility.Collapsed;
-                    sdAmdCO.Visibility = Visibility.Collapsed;
-                }
-
                 if (Family.FAM == Family.RyzenFamily.DragonRange || Family.FAM == Family.RyzenFamily.FireRange || Family.FAM == Family.RyzenFamily.StrixHalo || Family.FAM == Family.RyzenFamily.KrackanPoint) if (Family.CPUName.Contains("Ryzen 9") || Family.CPUName.Contains("395") || Family.CPUName.Contains("390")) sdAmdCCD2CO.Visibility = sdAmdCO.Visibility;
 
                 // Get the names of all the stored presets
