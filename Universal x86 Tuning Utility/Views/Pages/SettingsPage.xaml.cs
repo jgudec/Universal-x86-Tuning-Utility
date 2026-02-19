@@ -160,7 +160,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 await updateManager.DownloadAndInstallUpdate();
 
-                string filePath = "C:\\Universal.x86.Tuning.Utility.V2.msi";
+                string filePath = "C:\\Universal.x86.Tuning.Utility.msi";
 
                 try
                 {

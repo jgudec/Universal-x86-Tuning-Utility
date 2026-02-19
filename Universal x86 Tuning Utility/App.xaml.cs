@@ -60,7 +60,7 @@ namespace Universal_x86_Tuning_Utility
             return _host.Services.GetService(typeof(T)) as T;
         }
 
-        public static string version = "26.0.0";
+        public static string version = "26.0.1";
         private Mutex mutex;
         private const string MutexName = "UniversalX86TuningUtility";
 
@@ -234,6 +234,9 @@ namespace Universal_x86_Tuning_Utility
 
                 if (File.Exists("C:\\Universal.x86.Tuning.Utility.V2.msi"))
                     File.Delete("C:\\Universal.x86.Tuning.Utility.V2.msi");
+
+                if (File.Exists("C:\\Universal.x86.Tuning.Utility.msi"))
+                    File.Delete("C:\\Universal.x86.Tuning.Utility.msi");
 
                 Family.setCpuFamily();
 

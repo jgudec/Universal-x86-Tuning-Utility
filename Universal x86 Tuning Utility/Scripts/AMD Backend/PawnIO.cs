@@ -23,7 +23,8 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
     {
         private const int FunctionNameBytes = 32;
 
-        private const string DevicePath = @"\\.\PawnIO";
+        private static string OldDevicePath = @"\\.\PawnIO";
+        private static string DevicePath = @"\\?\GLOBALROOT\Device\PawnIO";
         private const uint ShareReadWrite = 0x00000003;
 
         // Device-specific control codes
@@ -92,8 +93,22 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
                 0,
                 IntPtr.Zero);
 
+            // Ensure backwards compatibility with pre-2.1.0 versions of PawnIO
             if (raw == IntPtr.Zero || raw.ToInt64() == -1)
-                return new PawnIo(null);
+            {
+                raw = CreateFile(
+                OldDevicePath,
+                FileAccess.GENERIC_READ | FileAccess.GENERIC_WRITE,
+                ShareReadWrite,
+                IntPtr.Zero,
+                CreationDisposition.OPEN_EXISTING,
+                0,
+                IntPtr.Zero);
+
+                if (raw == IntPtr.Zero || raw.ToInt64() == -1)
+                    return new PawnIo(null);
+                else DevicePath = OldDevicePath;
+            }
 
             try
             {
