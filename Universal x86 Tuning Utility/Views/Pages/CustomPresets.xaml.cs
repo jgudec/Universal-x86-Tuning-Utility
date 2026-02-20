@@ -132,6 +132,12 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 sdIntelBal.Visibility = Visibility.Collapsed;
                 sdIntelCoreRatio.Visibility = Visibility.Collapsed;
 
+                if(Family.FAM < Family.RyzenFamily.Renoir)
+                {
+                    sdAmdCCD1CO.Visibility = Visibility.Collapsed;
+                    sdAmdCCD2CO.Visibility = Visibility.Collapsed;
+                }
+                
                 if (Family.FAM != Family.RyzenFamily.StrixHalo || Family.FAM != Family.RyzenFamily.StrixPoint || Family.FAM != Family.RyzenFamily.KrackanPoint || Family.FAM != Family.RyzenFamily.PhoenixPoint || Family.FAM != Family.RyzenFamily.PhoenixPoint2 && Family.FAM != Family.RyzenFamily.Mendocino && Family.FAM != Family.RyzenFamily.Rembrandt && Family.FAM != Family.RyzenFamily.Lucienne && Family.FAM != Family.RyzenFamily.Renoir) sdAmdApuiGPUClk.Visibility = Visibility.Collapsed;
                 if (SystemInformation.PowerStatus.BatteryChargeStatus != BatteryChargeStatus.NoSystemBattery) sdAmdCpuTune.Visibility = Visibility.Collapsed;
 
@@ -1086,8 +1092,13 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 if (cbAllCO.IsChecked == true)
                 {
-                    if (nudAllCO.Value >= 0) commandValues = commandValues + $"--set-coall={nudAllCO.Value} ";
-                    if (nudAllCO.Value < 0) commandValues = commandValues + $"--set-coall={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudAllCO.Value))} ";
+
+                    if(Family.FAM < Family.RyzenFamily.Renoir) commandValues = commandValues + $"--set-coper={(0 << 20) | ((int)nudAllCO.Value & 0xFFFF)} ";
+                    else
+                    {
+                        if (nudAllCO.Value >= 0) commandValues = commandValues + $"--set-coall={nudAllCO.Value} ";
+                        if (nudAllCO.Value < 0) commandValues = commandValues + $"--set-coall={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudAllCO.Value))} ";
+                    }
                 }
 
                 if (cbGfxCO.IsChecked == true)
