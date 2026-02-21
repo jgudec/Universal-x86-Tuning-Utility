@@ -16,6 +16,7 @@ using Universal_x86_Tuning_Utility.Scripts.GPUs.AMD;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA;
 using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Services;
+using Settings = Universal_x86_Tuning_Utility.Properties.Settings;
 
 namespace Universal_x86_Tuning_Utility.Scripts
 {
@@ -31,7 +32,7 @@ namespace Universal_x86_Tuning_Utility.Scripts
         static string powerSaverPowerScheme = "961CC777-2547-4F9D-8174-7D86181b8A7A";
 
         //Translate RyzenAdj like cli arguments to UXTU
-        public static async void Translate(string _ryzenAdjString, bool isAutoReapply = false)
+        public static async void Translate(string _ryzenAdjString, bool isAutoReapply = false, bool isAutoOC = false)
         {
             try
             {
@@ -128,6 +129,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                                 uint ryzenAdjCommandValue = Convert.ToUInt32(ryzenAdjCommandValueString);
 
                                 if (ryzenAdjCommand.Contains("skin")) ryzenAdjCommandValue *= 256;
+
+                                if (ryzenAdjCommand.Contains("coall") && Settings.Default.isAutoUvCPU == true && isAutoOC == false) return;
+                                if (ryzenAdjCommand.Contains("coper") && Settings.Default.isAutoUvCPU == true && isAutoOC == false) return;
+                                if (ryzenAdjCommand.Contains("cogfx") && Settings.Default.isAutoUviGPU == true && isAutoOC == false) return;
 
                                 if (ryzenAdjCommandValue <= 0 && !ryzenAdjCommandString.Contains("co")) SMUCommands.applySettings(ryzenAdjCommandString, 0x0);
                                 else SMUCommands.applySettings(ryzenAdjCommandString, ryzenAdjCommandValue);
