@@ -80,7 +80,7 @@
                         VerticalAlignment="Bottom"
                         FontSize="10"
                         Foreground="#57FFFFFF"
-                        Text="Created by JamesCJ, sbski, ProjectSBC, and you!" />
+                        Text="Created and maintained by JamesCJ, with contributions from the wider community" />
 
                     <!--<Border Width="320" Height="120" HorizontalAlignment="Left" VerticalAlignment="Bottom" CornerRadius="0,4,0,0">
                         <Border.Background>
