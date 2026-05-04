@@ -134,7 +134,10 @@ namespace Universal_x86_Tuning_Utility.Scripts.Misc
                 else return path + $"\\Assets\\GameImages\\{CleanFileName(gameName)}.jpeg";
 
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to get game image");
+            }
             return path + "\\Assets\\GameImages\\default.png";
         }
 

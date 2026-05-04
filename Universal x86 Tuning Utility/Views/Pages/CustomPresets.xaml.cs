@@ -724,7 +724,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     }
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to delete preset");
+            }
         }
 
 
@@ -1052,7 +1055,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 }
                 Garbage.Garbage_Collect();
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to update preset values");
+            }
         }
 
         public string getCommandValues()

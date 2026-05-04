@@ -104,7 +104,11 @@ namespace Universal_x86_Tuning_Utility.Scripts
                 try
                 {
                     //App.memTimings = Mem_Timings.RetrieveTimings();
-                } catch { }
+                }
+                catch (Exception ex)
+                {
+                    Misc.DiagnosticLogger.LogError(ex, "Failed to retrieve memory timings");
+                }
 
                 //Zen1 - Zen2
                 if (CPUFamily == 23)

@@ -23,9 +23,9 @@ namespace Universal_x86_Tuning_Utility.Scripts.Misc
                     long usedMemory = GC.GetTotalMemory(true);
                 });
             }
-            catch
+            catch (Exception ex)
             {
-
+                DiagnosticLogger.LogError(ex, "Failed to collect garbage");
             }
         }
     }

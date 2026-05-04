@@ -778,5 +778,17 @@ namespace Universal_x86_Tuning_Utility.Properties {
                 this["cstmPreset"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int DiagnosticLogLevel {
+            get {
+                return ((int)(this["DiagnosticLogLevel"]));
+            }
+            set {
+                this["DiagnosticLogLevel"] = value;
+            }
+        }
     }
 }
