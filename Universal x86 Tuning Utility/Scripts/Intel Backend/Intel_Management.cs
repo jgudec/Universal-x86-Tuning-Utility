@@ -25,12 +25,18 @@ namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
             {
                 runIntelTDPChangeMSR(pl, pl);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel TDP MSR");
+            }
 
             //try { 
             //    runIntelTDPChangeMMIOKX(pl, pl); 
             //}
-            //catch { }
+            //catch (Exception ex)
+            //{
+            //    Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel TDP MMIOKX");
+            //}
         }
 
         public static void changePowerBalance(int value, int cpuOrGpu)
@@ -228,7 +234,10 @@ namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
                 Run_CLI.RunCommand(commandArguments, false, processMSR);
                 Task.Delay(100);
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel power balance via MSR");
+            }
         }
 
         public static void checkDriverBlockRegistry()

@@ -15,6 +15,7 @@ using Universal_x86_Tuning_Utility.Scripts.ASUS;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.AMD;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA;
 using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
+using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
 using Settings = Universal_x86_Tuning_Utility.Properties.Settings;
 
@@ -42,6 +43,7 @@ namespace Universal_x86_Tuning_Utility.Scripts
                 string[] ryzenAdjCommands = _ryzenAdjString.Split(' ');
                 ryzenAdjCommands = ryzenAdjCommands.Distinct().ToArray();
 
+                DiagnosticLogger.LogDebug($"Translate string: {_ryzenAdjString}");
                 //MessageBox.Show(_ryzenAdjString);
                 //Run through array
                 foreach (string ryzenAdjCommand in ryzenAdjCommands)
@@ -57,6 +59,7 @@ namespace Universal_x86_Tuning_Utility.Scripts
                             // Extract the command string after the "=" sign
                             string ryzenAdjCommandValueString = command.Substring(ryzenAdjCommand.IndexOf('=') + 1);
 
+                            DiagnosticLogger.LogDebug($"Processing: {ryzenAdjCommandString}={ryzenAdjCommandValueString}");
 
                             if (ryzenAdjCommandString.Contains("UXTUSR"))
                             {
@@ -136,19 +139,29 @@ namespace Universal_x86_Tuning_Utility.Scripts
 
                                 if (ryzenAdjCommandValue <= 0 && !ryzenAdjCommandString.Contains("co")) SMUCommands.applySettings(ryzenAdjCommandString, 0x0);
                                 else SMUCommands.applySettings(ryzenAdjCommandString, ryzenAdjCommandValue);
+
+                                DiagnosticLogger.LogDebug($"SMU applied: {ryzenAdjCommandString}=0x{ryzenAdjCommandValue:X}");
                                 Task.Delay(50);
                             }
                         }
-                        catch (Exception ex) { }
+                        catch (Exception ex)
+                        {
+                            DiagnosticLogger.LogError(ex, $"Failed to process command: {ryzenAdjCommand}");
+                        }
                     });
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to translate RyzenAdj command string");
+            }
         }
+
         private static void ADLX(string command, string value)
         {
             try
             {
+                DiagnosticLogger.LogDebug($"ADLX: {command}={value}");
                 string[] variables = value.Split('-');
 
                 if (command == "ADLX-Lag") ADLXBackend.SetAntiLag(int.Parse(variables[0]), bool.Parse(variables[1]));
@@ -162,13 +175,17 @@ namespace Universal_x86_Tuning_Utility.Scripts
                 if (command == "ADLX-Sync") ADLXBackend.SetEnhancedSync(int.Parse(variables[0]), bool.Parse(variables[1]));
                 if (command == "ADLX-ImageSharp") ADLXBackend.SetImageSharpning(int.Parse(variables[0]), bool.Parse(variables[1]), int.Parse(variables[2]));
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to apply ADLX settings");
+            }
         }
 
         private static void UXTUSR(string command, string value)
         {
             try
             {
+                DiagnosticLogger.LogDebug($"UXTUSR: {command}={value}");
                 string[] variables = value.Split('-');
 
                 if (command == "UXTUSR")
@@ -182,13 +199,17 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     Universal_x86_Tuning_Utility.Properties.Settings.Default.Save();
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to apply UXTUSR settings");
+            }
         }
 
         private static void NVIDIA(string command, string value)
         {
             try
             {
+                DiagnosticLogger.LogDebug($"NVIDIA: {command}={value}");
                 string[] variables = value.Split('-');
 
                 if (command == "NVIDIA-Clocks" && variables.Length == 2) NvTuning.SetClocks(int.Parse(variables[0]), int.Parse(variables[1]));
@@ -198,7 +219,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     NvTuning.SetClocks(int.Parse(variables[1]), int.Parse(variables[2]));
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to apply NVIDIA clocks");
+            }
         }
 
         static bool isMessageBoxOpen = false, isUpdatingUltiMode = false;
@@ -206,6 +230,7 @@ namespace Universal_x86_Tuning_Utility.Scripts
         {
             try
             {
+                DiagnosticLogger.LogDebug($"AsusWmi: {command}={value}");
                 uint id = 0;
                 int mode = 0;
                 if (command == "ASUS-Power")
@@ -265,7 +290,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     }
                 }
             } 
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to apply ASUS WMI settings");
+            }
         }
 
         private static void MessageBox_Enable(object sender, System.Windows.RoutedEventArgs e)

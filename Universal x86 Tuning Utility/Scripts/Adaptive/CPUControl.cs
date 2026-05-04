@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Universal_x86_Tuning_Utility.Scripts.Misc;
 
 namespace Universal_x86_Tuning_Utility.Scripts.Adaptive
 {
@@ -81,7 +82,11 @@ namespace Universal_x86_Tuning_Utility.Scripts.Adaptive
                         _lastPowerLimit = _newPowerLimit;
                     }
                 } 
-            } catch { }
+            }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to update power limit");
+            }
 
 
             _lastUsage = cpuLoad;
@@ -132,7 +137,11 @@ namespace Universal_x86_Tuning_Utility.Scripts.Adaptive
 
                 // Apply new CO
                 if (_newCO != _lastCO) UpdateCO(_newCO);
-            } catch { }
+            }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to update curve optimiser");
+            }
         }
 
         private static async void UpdateCO(int _newCO)

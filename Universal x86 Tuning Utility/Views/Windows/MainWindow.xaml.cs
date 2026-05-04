@@ -341,7 +341,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     monitor = null;
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during RTSS performance tracking tick");
+            }
         }
 
         private async Task ProcessGamePerformanceData(GameLauncherItem game)
@@ -403,9 +406,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     statuscode = (ushort)battery["BatteryStatus"];
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // Handle exceptions if necessary
+                DiagnosticLogger.LogError(ex, "Failed to get battery status");
             }
         }
 
@@ -437,7 +441,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during auto-reapply tick");
+            }
         }
         int i = 0;
         async void GC_Tick(object sender, EventArgs e)
@@ -570,7 +577,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during power mode change handling");
+            }
         }
 
         #region INavigationWindow Methods

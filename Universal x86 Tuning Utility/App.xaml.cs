@@ -79,12 +79,15 @@ namespace Universal_x86_Tuning_Utility
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.ControlledBy(Scripts.Misc.DiagnosticLogger.LevelSwitch)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code, applyThemeToRedirectedOutput: true)
                 .WriteTo.File(LOGS_FOLDER + "uxtu_log.txt",
                     fileSizeLimitBytes: 8 * 1024 * 1024, // 8MB
                     rollingInterval: RollingInterval.Day
                 )
                 .CreateLogger();
+
+            Scripts.Misc.DiagnosticLogger.ApplySettingsLevel();
 
             if (!IsVcRedistInstalled("x64") && !IsVcRedistInstalled("x86"))
             {
