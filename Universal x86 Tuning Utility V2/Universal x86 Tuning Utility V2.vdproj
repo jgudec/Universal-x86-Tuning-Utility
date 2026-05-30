@@ -127,7 +127,7 @@
                 {
                 "Name" = "8:.NET Core"
                 "Message" = "8:[VSDNETCOREMSG]"
-                "FrameworkVersion" = "8:10.0    "
+                "FrameworkVersion" = "8:10.0     "
                 "AllowLaterVersions" = "11:FALSE"
                 "InstallUrl" = "8:https://dotnet.microsoft.com/download/dotnet-core/[NetCoreVerMajorDotMinor]"
                 "IsNETCore" = "11:TRUE"
@@ -214,15 +214,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Universal x86 Tuning Utility"
-        "ProductCode" = "8:{5380D3F0-9FCC-4260-A6B4-B3CED15C1CC3}"
-        "PackageCode" = "8:{204DF263-95AD-42A1-A2E4-51EB3653E6C4}"
+        "ProductCode" = "8:{7629E36C-F733-4F0C-97BB-05D7004E78A3}"
+        "PackageCode" = "8:{72A0C20D-7F82-490E-A70F-8D771ECEC4A4}"
         "UpgradeCode" = "8:{300E743A-4C69-440D-9425-14C446AB2658}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:FALSE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:26.0.4"
+        "ProductVersion" = "8:26.0.5"
         "Manufacturer" = "8:JamesCJ60"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -764,7 +764,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_0FAC7670CF204A74B0B84BA8720E5EFC"
             {
-            "SourcePath" = "8:..\\Universal x86 Tuning Utility\\obj\\Debug\\net10.0-windows10.0.22621.0\\apphost.exe"
+            "SourcePath" = "8:..\\Universal x86 Tuning Utility\\obj\\Release\\net10.0-windows10.0.22621.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_B208FDAB7341429AB15D831E1F00D044"

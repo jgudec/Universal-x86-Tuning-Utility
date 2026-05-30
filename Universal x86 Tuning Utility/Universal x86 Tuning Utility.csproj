@@ -15,8 +15,8 @@
     <UseWindowsForms>True</UseWindowsForms>
     <SignAssembly>False</SignAssembly>
     <Copyright>© UXTU Team 2020 - 2026</Copyright>
-    <AssemblyVersion>26.0.4</AssemblyVersion>
-    <FileVersion>26.0.4</FileVersion>
+    <AssemblyVersion>26.0.5</AssemblyVersion>
+    <FileVersion>26.0.5</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
     <Version>26.0.4</Version>
@@ -56,6 +56,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="AMDFamily0F.bin" />
+    <None Remove="AMDFamily10.bin" />
+    <None Remove="AMDFamily17.bin" />
+    <None Remove="AMDReset.bin" />
     <None Remove="Assets\applicationIcon-1024.png" />
     <None Remove="Assets\applicationIcon-256.png" />
     <None Remove="Assets\BuiltInScaleModels.json" />
@@ -80,6 +84,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="AMDFamily0F.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AMDFamily10.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AMDFamily17.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AMDReset.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="favicon.ico" />
     <Content Include="Fan Configs\AYANEO_GEEK.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -160,9 +176,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="ADLX_PerformanceMetrics.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AMDFamily17.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\GameImages\default.png">
