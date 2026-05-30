@@ -238,7 +238,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Misc.DiagnosticLogger.LogError(ex, "Failed to process game library entry");
+                    }
                 }
 
                 list = list.OrderBy(item => item.gameName).ToList();
@@ -351,7 +354,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     });
                 }
             }
-            catch { /* ignore */ }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to launch game process");
+            }
         }
 
 
@@ -368,7 +374,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                 System.Diagnostics.Process.Start(psi);
 
             }
-            catch { /* ignore */ }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to run launch string");
+            }
         }
 
         public static bool BattleNetRunning()

@@ -60,7 +60,10 @@ namespace Universal_x86_Tuning_Utility.Scripts.Misc
                     return obj["Name"].ToString();
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to get CPU name");
+            }
             return "";
         }
         public static string GetGPUName(int i)
@@ -802,7 +805,7 @@ namespace Universal_x86_Tuning_Utility.Scripts.Misc
             }
             catch (ManagementException ex)
             {
-
+                DiagnosticLogger.LogError(ex, "Failed to check virtualization status");
             }
 
             return false;

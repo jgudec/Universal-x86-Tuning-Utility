@@ -43,6 +43,8 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
             cbAdaptive.IsChecked = Settings.Default.isStartAdpative;
             cbTrack.IsChecked = Settings.Default.isTrack;
 
+            cbxLogLevel.SelectedIndex = Settings.Default.DiagnosticLogLevel;
+
             checkUpdate();
         }
 
@@ -235,6 +237,18 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         {
             Settings.Default.isTrack = (bool)cbTrack.IsChecked;
             Settings.Default.Save();
+        }
+
+        private void cbxLogLevel_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (cbxLogLevel == null)
+            {
+                return;
+            }
+
+            Settings.Default.DiagnosticLogLevel = cbxLogLevel.SelectedIndex;
+            Settings.Default.Save();
+            DiagnosticLogger.ApplySettingsLevel();
         }
 
         private void nudAutoReapply_ValueChanged(object sender, RoutedEventArgs e)

@@ -50,6 +50,15 @@
         <CheckBox Name="cbAutoCheck" Click="cbAutoCheck_Click">Auto Update Check</CheckBox>
         <CheckBox Name="cbAdaptive" Click="cbAdaptive_Click">Auto Start Adaptive Mode</CheckBox>
         <CheckBox Name="cbTrack" Click="cbTrack_Click">Track Games</CheckBox>
+
+        <TextBlock Margin="0,12,0,4" Text="Diagnostic Logging" />
+        <ComboBox Name="cbxLogLevel" Width="200" HorizontalAlignment="Left" SelectionChanged="cbxLogLevel_SelectionChanged">
+            <ComboBoxItem>Off</ComboBoxItem>
+            <ComboBoxItem>Error only</ComboBoxItem>
+            <ComboBoxItem>Info</ComboBoxItem>
+            <ComboBoxItem>Debug</ComboBoxItem>
+        </ComboBox>
+
         <ui:Button Name="btnStressTest" Width="178" Click="btnStressTest_Click" Margin="0,9,0,0">
             <StackPanel Orientation="Horizontal">
                 <ui:SymbolIcon Symbol="Fire20" FontSize="24" Margin="0,0,9,0"/>
