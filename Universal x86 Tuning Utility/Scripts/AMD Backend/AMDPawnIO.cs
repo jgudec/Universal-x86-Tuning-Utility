@@ -16,11 +16,8 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
     /// Adapted from ZenStates's PawnIo.cs
     /// https://github.com/irusanov/ZenStates-Core/tree/master/PawnIo
     /// 
-    /// Independent implementation of the PawnIO device call format:
-    /// - IOCTL payload begins with a 32-byte ASCII function name (NUL-terminated if shorter)
-    /// - Followed by N 64-bit signed integers (little-endian)
     /// </summary>
-    public sealed class PawnIo
+    public sealed class AMDPawnIo
     {
         private const int FunctionNameBytes = 32;
 
@@ -40,7 +37,7 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
 
         private static readonly Version? _installedVersion = ReadInstalledVersion();
 
-        private PawnIo(SafeFileHandle? deviceHandle)
+        private AMDPawnIo(SafeFileHandle? deviceHandle)
         {
             _device = deviceHandle;
         }
@@ -57,7 +54,7 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
         // --------------------------------------------------------------------
         // Module loading
         // --------------------------------------------------------------------
-        public static PawnIo LoadModuleFromFile(string filePath)
+        public static AMDPawnIo LoadModuleFromFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("File path must not be empty.", nameof(filePath));
@@ -69,7 +66,7 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
             return LoadModule(moduleBytes);
         }
 
-        public static PawnIo LoadModuleFromResource(Assembly assembly, string resourceName)
+        public static AMDPawnIo LoadModuleFromResource(Assembly assembly, string resourceName)
         {
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
             if (string.IsNullOrWhiteSpace(resourceName))
@@ -77,13 +74,13 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
 
             using Stream? stream = assembly.GetManifestResourceStream(resourceName);
             if (stream == null)
-                return new PawnIo(null);
+                return new AMDPawnIo(null);
 
             byte[] moduleBytes = ReadAllBytes(stream);
             return LoadModule(moduleBytes);
         }
 
-        private static PawnIo LoadModule(byte[] moduleBytes)
+        private static AMDPawnIo LoadModule(byte[] moduleBytes)
         {
             IntPtr raw = CreateFile(
                 DevicePath,
@@ -110,7 +107,7 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
                 {
                     ToastNotification.ShowToastNotification("PawnIO Load Failed", "Could not open device handle. Is PawnIO installed and up to date?");
 
-                    return new PawnIo(null);
+                    return new AMDPawnIo(null);
                 }
                     
                 else DevicePath = OldDevicePath;
@@ -131,15 +128,15 @@ namespace Universal_x86_Tuning_Utility.Scripts.AMD_Backend
                 if (!ok)
                 {
                     CloseHandle(raw);
-                    return new PawnIo(null);
+                    return new AMDPawnIo(null);
                 }
 
-                return new PawnIo(new SafeFileHandle(raw, ownsHandle: true));
+                return new AMDPawnIo(new SafeFileHandle(raw, ownsHandle: true));
             }
             catch
             {
                 try { CloseHandle(raw); } catch { }
-                return new PawnIo(null);
+                return new AMDPawnIo(null);
             }
         }
 

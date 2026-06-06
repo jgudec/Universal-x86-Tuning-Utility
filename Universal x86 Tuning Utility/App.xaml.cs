@@ -26,6 +26,7 @@ using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
 //using Universal_x86_Tuning_Utility.Scripts.AMD_Backend;
 using Universal_x86_Tuning_Utility.Scripts.ASUS;
+using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
 using Universal_x86_Tuning_Utility.Views.Pages;
@@ -62,7 +63,7 @@ namespace Universal_x86_Tuning_Utility
             return _host.Services.GetService(typeof(T)) as T;
         }
 
-        public static string version = "26.0.5";
+        public static string version = "26.0.6";
         private Mutex mutex;
         private const string MutexName = "UniversalX86TuningUtility";
 
@@ -434,6 +435,7 @@ namespace Universal_x86_Tuning_Utility
         private async void OnExit(object sender, ExitEventArgs e)
         {
             if (Family.TYPE != Family.ProcessorType.Intel) SMUCommands.RyzenAccess.Deinitialize();
+            else Intel_Management.Deinitialize();
 
             await _host.StopAsync();
 

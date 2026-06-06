@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
 using Universal_x86_Tuning_Utility.Scripts.AMD_Backend;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.AMD;
@@ -535,28 +537,34 @@ namespace RyzenSmu
     class Smu
     {
         public static RyzenSMU ryzenSMU;
-        public static PawnIo pawnIo;
+        public static AMDPawnIo pawnIo;
 
         public void Initialise()
         {
-            pawnIo = PawnIo.LoadModuleFromFile(@"RyzenSMU.bin");
+            string modulePath = Path.Combine(
+                Settings.Default.Path,
+                "Assets",
+                "AMD",
+                "PawnIO",
+                "RyzenSMU.bin");
+
+            pawnIo = AMDPawnIo.LoadModuleFromFile(modulePath);
+
             if (!pawnIo.IsLoaded)
             {
                 Console.WriteLine("PawnIo failed to load.");
                 return;
             }
-            else
-            {
-                ryzenSMU = new RyzenSMU(pawnIo);
-                ryzenSMU.Open();
-            }
+
+            ryzenSMU = new RyzenSMU(pawnIo);
+            ryzenSMU.Open();
         }
 
         public void Deinitialize()
         {
-            if (pawnIo.IsLoaded)
+            if (pawnIo != null && pawnIo.IsLoaded)
             {
-                ryzenSMU.Close();
+                ryzenSMU?.Close();
                 pawnIo.Close();
             }
         }
@@ -618,7 +626,7 @@ namespace RyzenSmu
         private const string ISA_MUTEX_NAME = "Global\\Access_ISABUS.HTP.Method";
         private const string PCI_MUTEX_NAME = "Global\\Access_PCI";
 
-        private readonly PawnIo _pawnIo;
+        private readonly AMDPawnIo _pawnIo;
 
         // Mutex handles owned by this instance
         private Mutex? _isaMutex;
@@ -669,7 +677,7 @@ namespace RyzenSmu
         public uint LastCommand { get; private set; }
         public Status LastStatus { get; private set; } = Status.FAILED;
 
-        public RyzenSMU(PawnIo pawnIo)
+        public RyzenSMU(AMDPawnIo pawnIo)
         {
             _pawnIo = pawnIo ?? throw new ArgumentNullException(nameof(pawnIo));
         }

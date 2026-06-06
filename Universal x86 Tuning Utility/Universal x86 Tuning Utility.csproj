@@ -15,8 +15,8 @@
     <UseWindowsForms>True</UseWindowsForms>
     <SignAssembly>False</SignAssembly>
     <Copyright>© UXTU Team 2020 - 2026</Copyright>
-    <AssemblyVersion>26.0.5</AssemblyVersion>
-    <FileVersion>26.0.5</FileVersion>
+    <AssemblyVersion>26.0.6</AssemblyVersion>
+    <FileVersion>26.0.6</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
     <Version>26.0.4</Version>
@@ -84,16 +84,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="AMDFamily0F.bin">
+    <Content Include="Assets\AMD\PawnIO\AMDFamily0F.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="AMDFamily10.bin">
+    <Content Include="Assets\AMD\PawnIO\AMDFamily10.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="AMDFamily17.bin">
+    <Content Include="Assets\AMD\PawnIO\AMDFamily17.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="AMDReset.bin">
+    <Content Include="Assets\AMD\PawnIO\AMDReset.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="favicon.ico" />
@@ -179,6 +179,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\GameImages\default.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Intel\PawnIO\IntelMCHBAR.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\Intel\PawnIO\IntelMSR.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\RTSS\RTSSHooks64.dll">
@@ -459,7 +465,7 @@
     <None Update="RTSSSharedMemoryNET.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RyzenSMU.bin">
+    <None Update="Assets\AMD\PawnIO\RyzenSMU.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="ucrtbased.dll">
@@ -483,10 +489,6 @@
     <None Update="WinRing0_Mem.sys">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\Intel\" />
   </ItemGroup>
 
 </Project>
