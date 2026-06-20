@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Text;
@@ -22,6 +23,7 @@ using System.Windows.Shapes;
 using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
 using Universal_x86_Tuning_Utility.Scripts.ASUS;
+using Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA;
 using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
@@ -105,7 +107,17 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
             if (GetRadeonGPUCount() < 1) sdADLX.Visibility = Visibility.Collapsed;
             if (GetNVIDIAGPUCount() < 1) sdNVIDIA.Visibility = Visibility.Collapsed;
-
+            else {
+                if (!NvTuning.TryGetGpuInfo(out var info))
+                {
+                    Debug.WriteLine("Could not read GPU info.");
+                }
+                sdNVPower.Maximum = info.MaxPowerWatts;
+                nudNVPower.Maximum = info.MaxPowerWatts;
+                sdNVPower.Minimum = info.MinPowerWatts;
+                nudNVPower.Minimum = info.MinPowerWatts;
+                sdNVPower.Value = info.CurrentPowerWatts;
+            }
             try
             {
                 if (Display.uniqueRefreshRates.Count > 1)
@@ -420,6 +432,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             IsAmdOC = (bool)tsAmdOC.IsChecked,
                             amdClock = (int)nudAmdCpuClk.Value,
@@ -527,6 +540,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             ccd1Core1 = (int)nudCCD1Core1.Value,
                             ccd1Core2 = (int)nudCCD1Core2.Value,
@@ -634,6 +648,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             asusGPUUlti = (bool)tsASUSUlti.IsChecked,
                             asusiGPU = (bool)tsASUSEco.IsChecked,
@@ -851,6 +866,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if(myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsAmdOC.IsChecked = myPreset.IsAmdOC;
                     nudAmdCpuClk.Value = myPreset.amdClock;
@@ -968,6 +984,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if (myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsAmdOC.IsChecked = myPreset.IsAmdOC;
                     nudAmdCpuClk.Value = myPreset.amdClock;
@@ -1017,6 +1034,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if (myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsASUSUlti.IsChecked = myPreset.asusGPUUlti;
                     tsASUSEco.IsChecked = myPreset.asusiGPU;
@@ -1314,7 +1332,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 else commandValues = commandValues + $"--ADLX-Sync=0-false --ADLX-Sync=1-false ";
             }
 
-            if (tsNV.IsChecked == true) commandValues = commandValues + $"--NVIDIA-Clocks={nudNVMaxCore.Value}-{nudNVCore.Value}-{nudNVMem.Value} ";
+            if (tsNV.IsChecked == true) commandValues = commandValues + $"--NVIDIA-Clocks={nudNVMaxCore.Value}-{nudNVCore.Value}-{nudNVMem.Value}-{nudNVPower.Value} ";
 
             if (sdCcdAffinity.Visibility == Visibility.Visible) commandValues = commandValues + $"--CCD-Affinity={cbxCcdAffinity.SelectedIndex} ";
 

@@ -218,6 +218,12 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     NvTuning.SetMaxGPUClock(int.Parse(variables[0]));
                     NvTuning.SetClocks(int.Parse(variables[1]), int.Parse(variables[2]));
                 }
+                else if (command == "NVIDIA-Clocks" && variables.Length == 4)
+                {
+                    NvTuning.SetMaxGPUClock(int.Parse(variables[0]));
+                    NvTuning.SetClocks(int.Parse(variables[1]), int.Parse(variables[2]));
+                    NvTuning.SetPowerLimit(int.Parse(variables[3]));
+                }
             }
             catch (Exception ex)
             {

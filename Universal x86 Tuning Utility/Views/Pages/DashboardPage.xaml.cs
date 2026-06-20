@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using RyzenSmu;
+using System.Windows;
 using System.Windows.Input;
 using Universal_x86_Tuning_Utility.Scripts;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA;
@@ -38,7 +39,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
             }
             catch
             {
-
+               
             }
         }
     }

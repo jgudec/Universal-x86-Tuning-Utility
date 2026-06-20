@@ -532,6 +532,47 @@ namespace RyzenSmu
             }
             else throw new ArgumentException($"Command '{commandName}' not found");
         }
+
+
+        public static void disableFeature(uint[] Args)
+        {
+            var matchingCommands = commands.Where(c => c.Item1 == "disable-feature");
+            if (matchingCommands.Count() > 0)
+            {
+                List<Task> tasks = new List<Task>();
+                foreach (var command in matchingCommands)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        if (command.Item2 == true) RyzenAccess.SendMp1(command.Item3, ref Args);
+                        else RyzenAccess.SendRsmu(command.Item3, ref Args);
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            else throw new ArgumentException($"Command not found");
+        }
+
+        public static void enableFeature(uint[] Args)
+        {
+            var matchingCommands = commands.Where(c => c.Item1 == "enable-feature");
+            if (matchingCommands.Count() > 0)
+            {
+                List<Task> tasks = new List<Task>();
+                foreach (var command in matchingCommands)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        if (command.Item2 == true) RyzenAccess.SendMp1(command.Item3, ref Args);
+                        else RyzenAccess.SendRsmu(command.Item3, ref Args);
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            else throw new ArgumentException($"Command not found");
+        }
     }
 
     class Smu
