@@ -112,6 +112,18 @@ namespace Universal_x86_Tuning_Utility.ViewModels
                 }
             };
 
+                // Conditionally add Watercooler navigation item for supported hardware
+                if (WaterCoolerHardwareDetector.IsSupportedHardware())
+                {
+                    NavigationItems.Add(new NavigationItem()
+                    {
+                        Content = "Watercooler",
+                        PageTag = "watercooler",
+                        Icon = SymbolRegular.ArrowDownload48,
+                        PageType = typeof(Views.Pages.Watercooler)
+                    });
+                }
+
                 NavigationFooter = new ObservableCollection<INavigationControl>
             {
                 new NavigationItem()
@@ -200,6 +212,18 @@ namespace Universal_x86_Tuning_Utility.ViewModels
                     PageType = typeof(Views.Pages.SystemInfo)
                 }
             };
+
+                // Conditionally add Watercooler navigation item for supported hardware
+                if (WaterCoolerHardwareDetector.IsSupportedHardware())
+                {
+                    NavigationItems.Add(new NavigationItem()
+                    {
+                        Content = "Watercooler",
+                        PageTag = "watercooler",
+                        Icon = SymbolRegular.ArrowDownload48,
+                        PageType = typeof(Views.Pages.Watercooler)
+                    });
+                }
 
                 NavigationFooter = new ObservableCollection<INavigationControl>
             {

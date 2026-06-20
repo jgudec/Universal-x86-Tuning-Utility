@@ -192,6 +192,10 @@ namespace Universal_x86_Tuning_Utility
                         services.AddScoped<ViewModels.DataViewModel>();
                         services.AddScoped<Views.Pages.SettingsPage>();
                         services.AddScoped<ViewModels.SettingsViewModel>();
+                        services.AddScoped<Views.Pages.Watercooler>();
+
+                        // Watercooler service (singleton for auto-connect)
+                        services.AddSingleton<WaterCoolerService>();
 
                         // Configuration
                         services.Configure<AppConfig>(context.Configuration.GetSection(nameof(AppConfig)));
@@ -308,6 +312,18 @@ namespace Universal_x86_Tuning_Utility
                 }
 
                 await _host.StartAsync();
+
+                // Auto-connect watercooler on startup if enabled
+                try
+                {
+                    var waterCoolerService = _host.Services.GetService<WaterCoolerService>();
+                    if (waterCoolerService != null && WaterCoolerHardwareDetector.IsSupportedHardware())
+                        await waterCoolerService.TryAutoConnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to auto-connect watercooler");
+                }
 
                 try
                 {
