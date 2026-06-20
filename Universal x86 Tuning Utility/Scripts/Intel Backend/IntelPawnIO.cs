@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
+using Universal_x86_Tuning_Utility.Views.Windows;
 
 namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
 {
@@ -95,10 +96,6 @@ namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
 
                 return new IntelPawnIo(new SafeFileHandle(raw, ownsHandle: true));
             }
-
-            ToastNotification.ShowToastNotification(
-                "Intel PawnIO Load Failed",
-                "Could not open PawnIO or load the Intel module.");
 
             return new IntelPawnIo(null);
         }

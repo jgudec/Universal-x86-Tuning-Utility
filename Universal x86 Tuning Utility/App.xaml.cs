@@ -30,6 +30,7 @@ using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
 using Universal_x86_Tuning_Utility.Views.Pages;
+using Universal_x86_Tuning_Utility.Views.Windows;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 
@@ -63,7 +64,7 @@ namespace Universal_x86_Tuning_Utility
             return _host.Services.GetService(typeof(T)) as T;
         }
 
-        public static string version = "26.0.6";
+        public static string version = "26.2.0";
         private Mutex mutex;
         private const string MutexName = "UniversalX86TuningUtility";
 
@@ -291,6 +292,21 @@ namespace Universal_x86_Tuning_Utility
                     _logger.LogError(ex, "Failed to check for updates");
                 }
 
+                try
+                {
+                    if (IsInternetAvailable())
+                        if (PawnIoDetectionService.ShouldOpenInstaller())
+                        {
+                            InstallpawnIo installerWindow = new InstallpawnIo();
+
+                            installerWindow.Show();
+                        }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to check for PawnIO");
+                }
+
                 await _host.StartAsync();
 
                 try
@@ -409,7 +425,7 @@ namespace Universal_x86_Tuning_Utility
             {
                 using (var ping = new Ping())
                 {
-                    var result = ping.Send("8.8.8.8", 2000); // ping Google DNS server
+                    var result = ping.Send("8.8.8.8", 2000);
                     return result.Status == IPStatus.Success;
                 }
             }
