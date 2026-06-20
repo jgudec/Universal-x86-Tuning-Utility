@@ -1,289 +1,342 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using Universal_x86_Tuning_Utility.Properties;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
 {
-
     public static class Intel_Management
     {
-        private static System.Object objLock = new System.Object();
+        private static readonly object objLock = new object();
+
         public static string BaseDir = Settings.Default.Path;
+
+        private static IntelPawnIo? msrPawnIo;
+        private static IntelPawnIo? mchbarPawnIo;
+        private static IntelPawnIO? intelPawnIO;
+
+        private static string? MCHBAR;
+
+        public static void Initialise()
+        {
+            try
+            {
+                string? msrPath = ResolveIntelModulePath("IntelMSR.bin");
+
+                if (msrPath == null)
+                {
+                    Misc.DiagnosticLogger.LogError(
+                        new FileNotFoundException("IntelMSR.bin not found."),
+                        "Failed to initialise Intel PawnIO.");
+                    return;
+                }
+
+                msrPawnIo = IntelPawnIo.LoadModuleFromFile(msrPath);
+
+                string? mchbarPath = ResolveIntelModulePath("IntelMCHBAR.bin");
+
+                if (mchbarPath != null)
+                    mchbarPawnIo = IntelPawnIo.LoadModuleFromFile(mchbarPath);
+
+                if (msrPawnIo == null || !msrPawnIo.IsLoaded)
+                {
+                    Misc.DiagnosticLogger.LogError(
+                        new InvalidOperationException("IntelMSR.bin failed to load."),
+                        "Failed to initialise Intel PawnIO.");
+                    return;
+                }
+
+                intelPawnIO = new IntelPawnIO(msrPawnIo, mchbarPawnIo);
+                intelPawnIO.Open();
+
+                DetermineIntelMCHBAR();
+            }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to initialise Intel PawnIO.");
+            }
+        }
+
+        public static void Deinitialize()
+        {
+            try
+            {
+                intelPawnIO?.Close();
+
+                msrPawnIo?.Close();
+                mchbarPawnIo?.Close();
+
+                intelPawnIO = null;
+                msrPawnIo = null;
+                mchbarPawnIo = null;
+                MCHBAR = null;
+            }
+            catch { }
+        }
 
         public static void changeTDPAll(int pl)
         {
             try
             {
+                EnsureInitialised();
                 runIntelTDPChangeMSR(pl, pl);
             }
-            catch { }
-
-            //try { 
-            //    runIntelTDPChangeMMIOKX(pl, pl); 
-            //}
-            //catch { }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel TDP MSR.");
+            }
         }
 
         public static void changePowerBalance(int value, int cpuOrGpu)
         {
-            if (cpuOrGpu == 0) if (value >= 0 && value <= 31) changePowerBalance("0x0000063a 0x00000000", value);
-            if (cpuOrGpu == 1) if (value >= 0 && value <= 31) changePowerBalance("0x00000642 0x00000000", value);
+            if (value < 0 || value > 31)
+                return;
+
+            try
+            {
+                EnsureInitialised();
+
+                if (cpuOrGpu == 0)
+                    changePowerBalance("0x0000063a 0x00000000", value);
+
+                if (cpuOrGpu == 1)
+                    changePowerBalance("0x00000642 0x00000000", value);
+            }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel power balance.");
+            }
         }
 
         public static void changeVoltageOffset(int value, int voltagePlane)
         {
-            string processMSR = "";
-            string commandArguments = "";
             try
             {
-                if (voltagePlane == 0) commandArguments += $"-s write 0x150 0x80000011 0x{convertVoltageToHexMSR(value)};"; // CPU
-                if (voltagePlane == 1) commandArguments += $"-s write 0x150 0x80000111 0x{convertVoltageToHexMSR(value)};"; // iGPU
-                if (voltagePlane == 2) commandArguments += $"-s write 0x150 0x80000211 0x{convertVoltageToHexMSR(value)};"; // Cache
-                if (voltagePlane == 3) commandArguments += $"-s write 0x150 0x80000411 0x{convertVoltageToHexMSR(value)};"; // SA
+                EnsureInitialised();
 
-                processMSR = BaseDir + "Assets\\Intel\\MSR\\msr-cmd.exe";
+                ulong command = voltagePlane switch
+                {
+                    0 => 0x80000011UL,
+                    1 => 0x80000111UL,
+                    2 => 0x80000211UL,
+                    3 => 0x80000411UL,
+                    _ => 0UL
+                };
 
-                Run_CLI.RunCommand(commandArguments, false, processMSR);
+                if (command == 0)
+                    return;
+
+                ulong data = Convert.ToUInt64(convertVoltageToHexMSR(value), 16);
+                ulong msrValue = (command << 32) | data;
+
+                intelPawnIO!.WriteMsr(0x150, msrValue);
+
+                Thread.Sleep(100);
             }
-            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
-
-            Task.Delay(100);
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         public static void changeClockRatioOffset(int[] clockRatios)
         {
-            string processMSR = "";
-            string commandArguments = "";
             try
             {
-                string hexValue = "";
-                for (int i = 0; i < clockRatios.Length; ++i) hexValue += clockRatios[i].ToString("X2");
-                commandArguments += $"-s write 0x1AD 0x0 0x{hexValue};";
-                processMSR = BaseDir + "Assets\\Intel\\MSR\\msr-cmd.exe";
-                Run_CLI.RunCommand(commandArguments, false, processMSR);
-            }
-            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
+                EnsureInitialised();
 
-            Task.Delay(100);
+                if (clockRatios == null || clockRatios.Length == 0)
+                    return;
+
+                string hexValue = "";
+
+                for (int i = 0; i < clockRatios.Length; ++i)
+                    hexValue += clockRatios[i].ToString("X2");
+
+                ulong value = Convert.ToUInt64(hexValue, 16);
+
+                intelPawnIO!.WriteMsr(0x1AD, value);
+
+                Thread.Sleep(100);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         public static int[] readClockRatios()
         {
-            string processMSR = "";
-            string commandArguments = "";
-            string output = "";
-
             try
             {
-                commandArguments += $" read 0x1AD;";
-                processMSR = BaseDir + "Assets\\Intel\\MSR\\msr-cmd.exe";
-                output = Run_CLI.RunCommand(commandArguments, true, processMSR);
+                EnsureInitialised();
+
+                ulong value = intelPawnIO!.ReadMsr(0x1AD);
+                string hexValue = value.ToString("X16");
+
+                int[] intParts = new int[8];
+
+                for (int i = 0; i < 8; i++)
+                {
+                    string part = hexValue.Substring(i * 2, 2);
+                    intParts[i] = Convert.ToInt32(part, 16);
+                }
+
+                return intParts;
             }
-            catch (Exception ex)
+            catch
             {
-                return new int[0];
+                return Array.Empty<int>();
             }
-
-            string[] lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (lines.Length < 2) return new int[0];
-            
-            string secondLine = lines[1];
-            string[] parts = secondLine.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length < 2) return new int[0];
-            
-            string hexValue = parts[parts.Length - 1];
-            hexValue = hexValue.Substring(2);
-
-            int numberOfParts = hexValue.Length / 2;
-            string[] hexParts = new string[numberOfParts];
-            int[] intParts = new int[numberOfParts];
-
-            for (int i = 0; i < numberOfParts; i++)
-            {
-                hexParts[i] = hexValue.Substring(i * 2, 2);
-                intParts[i] = Convert.ToInt32(hexParts[i], 16);
-            }
-
-            return intParts;
         }
-
-
 
         public static int changeGpuClock(int value)
         {
-            string processKX = "";
-            string commandArguments = "";
-            string clockHex = "";
-
-            try
-            {
-                processKX = BaseDir + "Assets\\Intel\\KX\\KX.exe";
-                clockHex = convertClockToHexMMIO(value);
-
-                commandArguments = "/wrmem8 " + MCHBAR + "5994 " + clockHex;
-
-                Run_CLI.RunCommand(commandArguments, true, processKX);
-                Task.Delay(100);
-            }
-            catch(Exception ex) { MessageBox.Show(ex.ToString()); }
-
-            return 0;
+            /*
+             * Not currently supported.
+             *
+             */
+            return -1;
         }
 
-        static void runIntelTDPChangeMMIOKX(int pl1TDP, int pl2TDP)
+        private static void runIntelTDPChangeMSR(int pl1TDP, int pl2TDP)
         {
-            string processKX = "";
-            string hexPL1 = "";
-            string hexPL2 = "";
-            string commandArgumentsPL1 = "";
-            string commandArgumentsPL2 = "";
             try
             {
+                EnsureInitialised();
 
-                processKX = BaseDir + "Assets\\Intel\\KX\\KX.exe";
-                hexPL1 = ConvertTDPToHexMMIO(pl1TDP);
-                hexPL2 = ConvertTDPToHexMMIO(pl2TDP);
+                string hexPL1 = convertTDPToHexMSR(pl1TDP - 1);
+                string hexPL2 = convertTDPToHexMSR(pl2TDP);
 
-                if (hexPL1 != "Error" && hexPL2 != "Error")
+                if (hexPL1 == "Error" || hexPL2 == "Error")
+                    return;
+
+                lock (objLock)
                 {
-                    commandArgumentsPL1 = "/wrmem16 " + MCHBAR + "a0 0x" + hexPL1;
+                    hexPL1 = hexPL1.PadLeft(3, '0');
+                    hexPL2 = hexPL2.PadLeft(3, '0');
 
-                    Run_CLI.RunCommand(commandArgumentsPL1, true, processKX);
-                    Task.Delay(500);
-                    commandArgumentsPL2 = "/wrmem16 " + MCHBAR + "a4 0x" + hexPL2;
+                    uint high = Convert.ToUInt32("00438" + hexPL2, 16);
+                    uint low = Convert.ToUInt32("00dd8" + hexPL1, 16);
 
-                    Run_CLI.RunCommand(commandArgumentsPL2, true, processKX);
+                    ulong value = ((ulong)high << 32) | low;
 
-                    Task.Delay(100);
+                    intelPawnIO!.WriteMsr(0x610, value);
+
+                    Thread.Sleep(100);
                 }
             }
-            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
-
-        static void runIntelTDPChangeMSR(int pl1TDP, int pl2TDP)
+        private static void changePowerBalance(string address, int value)
         {
-
-            string processMSR = "";
-            string hexPL1 = "";
-            string hexPL2 = "";
-            string commandArguments = "";
             try
             {
+                EnsureInitialised();
 
-                hexPL1 = convertTDPToHexMSR(pl1TDP);
-                hexPL2 = convertTDPToHexMSR(pl2TDP);
+                string[] parts = address.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0)
+                    return;
 
-                if (hexPL1 != "Error" && hexPL2 != "Error")
-                {
-                    lock (objLock)
-                    {
-                        if (hexPL1.Length < 3)
-                        {
-                            if (hexPL1.Length == 1) { hexPL1 = "00" + hexPL1; }
-                            if (hexPL1.Length == 2) { hexPL1 = "0" + hexPL1; }
-                        }
-                        if (hexPL2.Length < 3)
-                        {
-                            if (hexPL2.Length == 1) { hexPL2 = "00" + hexPL2; }
-                            if (hexPL2.Length == 2) { hexPL2 = "0" + hexPL2; }
-                        }
+                string msrText = parts[0].Replace("0x", "", StringComparison.OrdinalIgnoreCase);
+                uint msr = Convert.ToUInt32(msrText, 16);
 
-                        commandArguments = "-s write 0x610 0x00438" + hexPL2 + " 0x00dd8" + hexPL1;
-                        processMSR = BaseDir + "Assets\\Intel\\MSR\\msr-cmd.exe";
-                        Run_CLI.RunCommand(commandArguments, false, processMSR);
+                intelPawnIO!.WriteMsr(msr, unchecked((ulong)value));
 
-                        Task.Delay(100);
-                    }
-                }
+                Thread.Sleep(100);
             }
-            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
-        }
-
-
-        static void changePowerBalance(string address, int value)
-        {
-
-            string processMSR = "";
-            string commandArguments = "";
-            try
+            catch (Exception ex)
             {
-                string hexvalue;
-                hexvalue = "0x" + value.ToString("X");
-
-                commandArguments = "-s write " + address + " " + hexvalue;
-                processMSR = BaseDir + "Assets\\Intel\\MSR\\msr-cmd.exe";
-
-                Run_CLI.RunCommand(commandArguments, false, processMSR);
-                Task.Delay(100);
+                Misc.DiagnosticLogger.LogError(ex, "Failed to change Intel power balance via MSR.");
             }
-            catch (Exception ex) { }
         }
 
         public static void checkDriverBlockRegistry()
         {
-
-            RegistryKey myKey = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\CI\\Config", true);
-            if (myKey != null)
+            try
             {
-                if (myKey.GetValue("VulnerableDriverBlocklistEnable") == "1")
+                RegistryKey? myKey = Registry.LocalMachine.OpenSubKey(
+                    @"SYSTEM\CurrentControlSet\Control\CI\Config",
+                    true);
+
+                if (myKey != null)
                 {
-                    myKey.SetValue("VulnerableDriverBlocklistEnable", "0", RegistryValueKind.String);
+                    object? value = myKey.GetValue("VulnerableDriverBlocklistEnable");
+
+                    if (value?.ToString() == "1")
+                    {
+                        myKey.SetValue(
+                            "VulnerableDriverBlocklistEnable",
+                            "0",
+                            RegistryValueKind.String);
+                    }
+
+                    myKey.Close();
                 }
-                myKey.Close();
             }
+            catch { }
         }
 
         public static void determineCPU()
         {
             checkDriverBlockRegistry();
+            EnsureInitialised();
             DetermineIntelMCHBAR();
         }
 
-        static string MCHBAR = null;
-
-        static bool DetermineIntelMCHBAR()
+        private static bool DetermineIntelMCHBAR()
         {
-            string processKX = BaseDir + "Assets\\Intel\\KX\\KX.exe";
-
-            if (!File.Exists(processKX))
-                return false;
-
-            string output = Run_CLI.RunCommand("/RdPci32 0 0 0 0x48", true, processKX);
-
-            if (output.Contains("Return"))
+            try
             {
-                string mchbarValue = GetValueAfter(output, "Return ");
-                MCHBAR = "0x" + long.Parse(mchbarValue).ToString("X2").Substring(0, 4);
+                EnsureInitialised();
+
+                if (intelPawnIO == null || !intelPawnIO.HasMchbar)
+                    return false;
+
+                ulong mchbar = intelPawnIO.GetMchbarAddress();
+
+                if (mchbar == 0)
+                    return false;
+
+                MCHBAR = "0x" + mchbar.ToString("X");
+
                 return true;
             }
-            return false;
+            catch
+            {
+                return false;
+            }
         }
 
-
-        private static string GetValueAfter(string str, string searchString)
+        private static void EnsureInitialised()
         {
-            if (string.IsNullOrEmpty(str) || string.IsNullOrEmpty(searchString))
-                return string.Empty;
+            if (intelPawnIO != null && intelPawnIO.IsLoaded)
+                return;
 
-            int startIndex = str.IndexOf(searchString);
-            if (startIndex == -1)
-                return string.Empty;
+            Initialise();
+        }
 
-            startIndex += searchString.Length;
+        private static string? ResolveIntelModulePath(string fileName)
+        {
+            string binName = Path.ChangeExtension(fileName, ".bin");
 
-            return str.Substring(startIndex);
+            string[] candidates =
+            {
+                Path.Combine(BaseDir, "Assets", "Intel", "PawnIO", binName),
+                Path.Combine(BaseDir, "Assets", "Intel", "PawnIO", fileName),
+
+                binName,
+                fileName
+            };
+
+            return candidates.FirstOrDefault(File.Exists);
         }
 
         private static string ConvertTDPToHexMMIO(int tdp)
@@ -292,11 +345,9 @@ namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
             {
                 int newTDP = (tdp * 1000 / 125) + 32768;
                 return newTDP.ToString("X");
-
             }
-            catch (Exception ex)
+            catch
             {
-
                 return "Error";
             }
         }
@@ -305,26 +356,23 @@ namespace Universal_x86_Tuning_Utility.Scripts.Intel_Backend
         {
             try
             {
-                int newTDP = (tdp * 8);
+                int newTDP = tdp * 8;
                 return newTDP.ToString("X");
-
             }
-            catch (Exception ex)
+            catch
             {
-
                 return "Error";
             }
         }
 
-        static string convertVoltageToHexMSR(int volt)
+        private static string convertVoltageToHexMSR(int volt)
         {
             double hex = volt * 1.024;
             int result = (int)Math.Round(hex) << 21;
             return result.ToString("X");
         }
 
-
-        static string convertClockToHexMMIO(int value)
+        private static string convertClockToHexMMIO(int value)
         {
             value /= 50;
             return "0x" + value.ToString("X2");

@@ -260,7 +260,10 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Misc.DiagnosticLogger.LogError(ex, "Failed to set premade presets");
+            }
         }
     }
 }

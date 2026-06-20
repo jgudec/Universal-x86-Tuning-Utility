@@ -1,4 +1,6 @@
 ﻿using Accord.Math.Distances;
+using AutoOC.Controllers;
+using AutoOC.Monitors;
 using DuoVia.FuzzyStrings;
 using GameLib.Plugin.RiotGames.Model;
 using Gma.System.MouseKeyHook;
@@ -148,6 +150,14 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
         static bool firstTime = true;
         private static List<GameLauncherItem> listOfGames = null;
         int garbage = -1;
+
+        InstabilityMonitor monitor = null;
+
+        AdaptiveUndervoltController cpuController = null;
+        AdaptiveUndervoltController iGpuController = null;
+
+        int lastCPUUVOffset = 0;
+        int lastiGPUUVOffset = 0;
         private async void Misc_Tick(object sender, EventArgs e)
         {
             try
@@ -253,8 +263,88 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     else RTSS.startRTSS();
                 }
 
+                if(Settings.Default.isAutoUvCPU == true)
+                {
+
+                    if(monitor == null) monitor = new InstabilityMonitor();
+
+                    if (cpuController == null) cpuController = new AdaptiveUndervoltController(
+                        monitor,
+                        minOffset: -50,
+                        stepSize: 1,
+                        stableThreshold: 8,
+                        cooldownThreshold: 4,
+                        isIgpu: false
+                    );
+
+                    var newOffset = cpuController.UpdateOffset();
+                    var commandValues = "";
+
+                    if (Family.FAM < Family.RyzenFamily.Renoir) commandValues = $"--set-coper={(0 << 20) | (newOffset & 0xFFFF)} ";
+                    else
+                    {
+                        if (newOffset >= 0) commandValues = commandValues + $"--set-coall={newOffset} ";
+                        if (newOffset < 0) commandValues = commandValues + $"--set-coall={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)newOffset))} ";
+                    }
+
+                    if (lastCPUUVOffset != newOffset)
+                    {
+                        await Task.Run(() => RyzenAdj_To_UXTU.Translate(commandValues, false, true));
+                        lastCPUUVOffset = newOffset;
+                    }
+
+                    cpuController.RecordAppliedOffset(newOffset);
+                }
+                else if (Settings.Default.isAutoUvCPU == false && cpuController != null)
+                {
+                    cpuController.Dispose();
+                    cpuController = null;
+                }
+
+
+                if (Settings.Default.isAutoUviGPU == true)
+                {
+                    if (monitor == null) monitor = new InstabilityMonitor();
+
+                    if(iGpuController == null) iGpuController = new AdaptiveUndervoltController(
+                        monitor,
+                        minOffset: -50,
+                        stepSize: 1,
+                        stableThreshold: 8,
+                        cooldownThreshold: 4,
+                        isIgpu : true
+                    );
+
+                    var newOffset = iGpuController.UpdateOffset();
+                    var commandValues = "";
+
+                    if (newOffset >= 0) commandValues = commandValues + $"--set-cogfx={newOffset} ";
+                    if (newOffset < 0) commandValues = commandValues + $"--set-cogfx={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)newOffset))} ";
+
+                    if (lastiGPUUVOffset != newOffset)
+                    {
+                        await Task.Run(() => RyzenAdj_To_UXTU.Translate(commandValues, false, true));
+                        lastiGPUUVOffset = newOffset;
+                    }
+
+                    iGpuController.RecordAppliedOffset(newOffset);
+                }
+                else if (Settings.Default.isAutoUviGPU == false && iGpuController != null)
+                {
+                    iGpuController.Dispose();
+                    iGpuController = null;
+                }
+
+                if(Settings.Default.isAutoUvCPU == false && Settings.Default.isAutoUviGPU == false && monitor != null)
+                {
+                    monitor.Stop();
+                    monitor = null;
+                }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during RTSS performance tracking tick");
+            }
         }
 
         private async Task ProcessGamePerformanceData(GameLauncherItem game)
@@ -316,9 +406,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     statuscode = (ushort)battery["BatteryStatus"];
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // Handle exceptions if necessary
+                DiagnosticLogger.LogError(ex, "Failed to get battery status");
             }
         }
 
@@ -350,7 +441,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during auto-reapply tick");
+            }
         }
         int i = 0;
         async void GC_Tick(object sender, EventArgs e)
@@ -483,7 +577,10 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during power mode change handling");
+            }
         }
 
         #region INavigationWindow Methods
@@ -561,7 +658,7 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
             Settings.Default.isAdaptiveModeRunning = false;
             Settings.Default.Save();
             Controller.magWindow?.Dispose();
-            Fan_Control.disableFanControl();
+            //Fan_Control.disableFanControl();
         }
 
         private void mainWindow_Loaded(object sender, RoutedEventArgs e)

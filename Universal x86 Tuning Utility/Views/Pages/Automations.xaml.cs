@@ -107,11 +107,25 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 }
             }
 
+            if (Family.TYPE != Family.ProcessorType.Intel)
+            {
+                ccAutoOcCpuUv.Visibility = Visibility.Visible;
+                cbCPUUV.IsChecked = Settings.Default.isAutoUvCPU;
+                ccAutoOcIgpuUv.Visibility = Visibility.Visible;
+                cbiGPUUV.IsChecked = Settings.Default.isAutoUviGPU;
+            }
+            else
+            {
+                ccAutoOcCpuUv.Visibility = Visibility.Collapsed;
+                ccAutoOcIgpuUv.Visibility = Visibility.Collapsed;
+            }
+
             Garbage.Garbage_Collect();
 
             getAcPreset(Settings.Default.acPreset);
             getDcPreset(Settings.Default.dcPreset);
             getResumePreset(Settings.Default.resumePreset);
+
             setup = true;
         }
 
@@ -721,6 +735,16 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            if(setup == true)
+            {
+                Settings.Default.isAutoUvCPU = cbCPUUV.IsChecked.Value;
+                Settings.Default.isAutoUviGPU = cbiGPUUV.IsChecked.Value;
+                Settings.Default.Save();
+            }
         }
     }
 }

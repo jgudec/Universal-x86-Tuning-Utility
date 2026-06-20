@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Text;
@@ -22,6 +23,7 @@ using System.Windows.Shapes;
 using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
 using Universal_x86_Tuning_Utility.Scripts.ASUS;
+using Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA;
 using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
@@ -105,7 +107,17 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
             if (GetRadeonGPUCount() < 1) sdADLX.Visibility = Visibility.Collapsed;
             if (GetNVIDIAGPUCount() < 1) sdNVIDIA.Visibility = Visibility.Collapsed;
-
+            else {
+                if (!NvTuning.TryGetGpuInfo(out var info))
+                {
+                    Debug.WriteLine("Could not read GPU info.");
+                }
+                sdNVPower.Maximum = info.MaxPowerWatts;
+                nudNVPower.Maximum = info.MaxPowerWatts;
+                sdNVPower.Minimum = info.MinPowerWatts;
+                nudNVPower.Minimum = info.MinPowerWatts;
+                sdNVPower.Value = info.CurrentPowerWatts;
+            }
             try
             {
                 if (Display.uniqueRefreshRates.Count > 1)
@@ -132,22 +144,20 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 sdIntelBal.Visibility = Visibility.Collapsed;
                 sdIntelCoreRatio.Visibility = Visibility.Collapsed;
 
+                if(Family.FAM < Family.RyzenFamily.Renoir)
+                {
+                    sdAmdCCD1CO.Visibility = Visibility.Collapsed;
+                    sdAmdCCD2CO.Visibility = Visibility.Collapsed;
+                }
+                
                 if (Family.FAM != Family.RyzenFamily.StrixHalo || Family.FAM != Family.RyzenFamily.StrixPoint || Family.FAM != Family.RyzenFamily.KrackanPoint || Family.FAM != Family.RyzenFamily.PhoenixPoint || Family.FAM != Family.RyzenFamily.PhoenixPoint2 && Family.FAM != Family.RyzenFamily.Mendocino && Family.FAM != Family.RyzenFamily.Rembrandt && Family.FAM != Family.RyzenFamily.Lucienne && Family.FAM != Family.RyzenFamily.Renoir) sdAmdApuiGPUClk.Visibility = Visibility.Collapsed;
-                if (Family.CPUName.Contains("U") && Family.FAM > Family.RyzenFamily.Renoir) sdAmdPBO.Visibility = Visibility.Collapsed;
                 if (SystemInformation.PowerStatus.BatteryChargeStatus != BatteryChargeStatus.NoSystemBattery) sdAmdCpuTune.Visibility = Visibility.Collapsed;
 
                 if (Family.FAM < Family.RyzenFamily.Renoir) sdAmdSoftClk.Visibility = Visibility.Visible;
-
-                if (Family.FAM < Family.RyzenFamily.Renoir || Family.FAM == Family.RyzenFamily.Mendocino) sdAmdCO.Visibility = Visibility.Collapsed;
-                else sdAmdCO.Visibility = Visibility.Visible;
+                
+                sdAmdCO.Visibility = Visibility.Visible;
 
                 sdAmdCCD1CO.Visibility = sdAmdCO.Visibility;
-
-                if (Family.FAM < Family.RyzenFamily.Renoir)
-                {
-                    sdAmdPowerProfile.Visibility = Visibility.Collapsed;
-                    sdAmdCO.Visibility = Visibility.Collapsed;
-                }
 
                 if (Family.FAM == Family.RyzenFamily.DragonRange || Family.FAM == Family.RyzenFamily.FireRange || Family.FAM == Family.RyzenFamily.StrixHalo || Family.FAM == Family.RyzenFamily.KrackanPoint) if (Family.CPUName.Contains("Ryzen 9") || Family.CPUName.Contains("395") || Family.CPUName.Contains("390")) sdAmdCCD2CO.Visibility = sdAmdCO.Visibility;
 
@@ -422,6 +432,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             IsAmdOC = (bool)tsAmdOC.IsChecked,
                             amdClock = (int)nudAmdCpuClk.Value,
@@ -529,6 +540,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             ccd1Core1 = (int)nudCCD1Core1.Value,
                             ccd1Core2 = (int)nudCCD1Core2.Value,
@@ -636,6 +648,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             nvMaxCoreClk = (int)nudNVMaxCore.Value,
                             nvCoreClk = (int)nudNVCore.Value,
                             nvMemClk = (int)nudNVMem.Value,
+                            nvPower = (int)nudNVPower.Value,
 
                             asusGPUUlti = (bool)tsASUSUlti.IsChecked,
                             asusiGPU = (bool)tsASUSEco.IsChecked,
@@ -726,7 +739,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     }
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to delete preset");
+            }
         }
 
 
@@ -850,6 +866,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if(myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsAmdOC.IsChecked = myPreset.IsAmdOC;
                     nudAmdCpuClk.Value = myPreset.amdClock;
@@ -967,6 +984,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if (myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsAmdOC.IsChecked = myPreset.IsAmdOC;
                     nudAmdCpuClk.Value = myPreset.amdClock;
@@ -1016,6 +1034,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     nudNVMaxCore.Value = myPreset.nvMaxCoreClk;
                     nudNVCore.Value = myPreset.nvCoreClk;
                     nudNVMem.Value = myPreset.nvMemClk;
+                    if (myPreset.nvPower > 0) nudNVPower.Value = myPreset.nvPower;
 
                     tsASUSUlti.IsChecked = myPreset.asusGPUUlti;
                     tsASUSEco.IsChecked = myPreset.asusiGPU;
@@ -1054,7 +1073,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 }
                 Garbage.Garbage_Collect();
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to update preset values");
+            }
         }
 
         public string getCommandValues()
@@ -1077,7 +1099,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
             if (Family.TYPE == Family.ProcessorType.Amd_Apu)
             {
                 if (cbAPUTemp.IsChecked == true) commandValues = commandValues + $"--tctl-temp={nudAPUTemp.Value} --cHTC-temp={nudAPUTemp.Value} ";
-                if (cbAPUSkinTemp.IsChecked == true) commandValues = commandValues + $"--apu-skin-temp={nudAPUSkinTemp.Value} ";
+                if (cbAPUSkinTemp.IsChecked == true) commandValues = commandValues + $"--apu-skin-temp={nudAPUSkinTemp.Value *= 256} ";
                 if (cbSTAPMPow.IsChecked == true) commandValues = commandValues + $"--stapm-limit={nudSTAPMPow.Value * 1000}  ";
                 if (cbFastPow.IsChecked == true) commandValues = commandValues + $"--fast-limit={nudFastPow.Value * 1000} ";
                 if (cbFastTime.IsChecked == true) commandValues = commandValues + $"--stapm-time={nudFastTime.Value} ";
@@ -1094,8 +1116,13 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 if (cbAllCO.IsChecked == true)
                 {
-                    if (nudAllCO.Value >= 0) commandValues = commandValues + $"--set-coall={nudAllCO.Value} ";
-                    if (nudAllCO.Value < 0) commandValues = commandValues + $"--set-coall={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudAllCO.Value))} ";
+
+                    if(Family.FAM < Family.RyzenFamily.Renoir) commandValues = commandValues + $"--set-coper={(0 << 20) | ((int)nudAllCO.Value & 0xFFFF)} ";
+                    else
+                    {
+                        if (nudAllCO.Value >= 0) commandValues = commandValues + $"--set-coall={nudAllCO.Value} ";
+                        if (nudAllCO.Value < 0) commandValues = commandValues + $"--set-coall={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudAllCO.Value))} ";
+                    }
                 }
 
                 if (cbGfxCO.IsChecked == true)
@@ -1128,25 +1155,33 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (cbxBoost.SelectedIndex == 2) commandValues = commandValues + $"--max-performance ";
                 }
 
-                if (Family.FAM == Family.RyzenFamily.DragonRange)
+                if (Family.FAM == Family.RyzenFamily.DragonRange || Family.FAM == Family.RyzenFamily.FireRange || Family.FAM == Family.RyzenFamily.StrixHalo)
                 {
-                    if (cbCCD1Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD1Core1.Value & 0xFFFF)} ";
-                    if (cbCCD1Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD1Core2.Value & 0xFFFF)} ";
-                    if (cbCCD1Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD1Core3.Value & 0xFFFF)} ";
-                    if (cbCCD1Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD1Core4.Value & 0xFFFF)} ";
-                    if (cbCCD1Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD1Core5.Value & 0xFFFF)} ";
-                    if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
-                    if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
-                    if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                    if (cbCCD1Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 0, (int)nudCCD1Core1.Value)} ";
+                    if (cbCCD1Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 1, (int)nudCCD1Core2.Value)} ";
+                    if (cbCCD1Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 2, (int)nudCCD1Core3.Value)} ";
+                    if (cbCCD1Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 3, (int)nudCCD1Core4.Value)} ";
+                    if (cbCCD1Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 4, (int)nudCCD1Core5.Value)} ";
+                    if (cbCCD1Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 5, (int)nudCCD1Core6.Value)} ";
+                    if (cbCCD1Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 6, (int)nudCCD1Core7.Value)} ";
+                    if (cbCCD1Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 7, (int)nudCCD1Core8.Value)} ";
+                    if (cbCCD1Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 8, (int)nudCCD1Core9.Value)} ";
+                    if (cbCCD1Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 9, (int)nudCCD1Core10.Value)} ";
+                    if (cbCCD1Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 10, (int)nudCCD1Core11.Value)} ";
+                    if (cbCCD1Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 11, (int)nudCCD1Core12.Value)} ";
 
-                    if (cbCCD2Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD2Core1.Value & 0xFFFF)} ";
-                    if (cbCCD2Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD2Core2.Value & 0xFFFF)} ";
-                    if (cbCCD2Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD2Core3.Value & 0xFFFF)} ";
-                    if (cbCCD2Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD2Core4.Value & 0xFFFF)} ";
-                    if (cbCCD2Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD2Core5.Value & 0xFFFF)} ";
-                    if (cbCCD2Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD2Core6.Value & 0xFFFF)} ";
-                    if (cbCCD2Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD2Core7.Value & 0xFFFF)} ";
-                    if (cbCCD2Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD2Core8.Value & 0xFFFF)} ";
+                    if (cbCCD2Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 0, (int)nudCCD2Core1.Value)} ";
+                    if (cbCCD2Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 1, (int)nudCCD2Core2.Value)} ";
+                    if (cbCCD2Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 2, (int)nudCCD2Core3.Value)} ";
+                    if (cbCCD2Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 3, (int)nudCCD2Core4.Value)} ";
+                    if (cbCCD2Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 4, (int)nudCCD2Core5.Value)} ";
+                    if (cbCCD2Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 5, (int)nudCCD2Core6.Value)} ";
+                    if (cbCCD2Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 6, (int)nudCCD2Core7.Value)} ";
+                    if (cbCCD2Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 7, (int)nudCCD2Core8.Value)} ";
+                    if (cbCCD2Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 8, (int)nudCCD2Core9.Value)} ";
+                    if (cbCCD2Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 9, (int)nudCCD2Core10.Value)} ";
+                    if (cbCCD2Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 10, (int)nudCCD2Core11.Value)} ";
+                    if (cbCCD2Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 11, (int)nudCCD2Core12.Value)} ";
                 }
                 else
                 {
@@ -1158,6 +1193,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={(5 << 20) | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
                     if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={(6 << 20) | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
                     if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                    if (cbCCD1Core9.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core9.Value & 0xFFFF)} ";
+                    if (cbCCD1Core10.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core10.Value & 0xFFFF)} ";
+                    if (cbCCD1Core11.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core11.Value & 0xFFFF)} ";
+                    if (cbCCD1Core12.IsChecked == true) commandValues = commandValues + $"--set-coper={(7 << 20) | ((int)nudCCD1Core12.Value & 0xFFFF)} ";
                 }
 
                 if (tsAmdOC.IsChecked == true)
@@ -1204,23 +1243,31 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     if (nudGfxCO.Value < 0) commandValues = commandValues + $"--set-cogfx={Convert.ToUInt32(0x100000 - (uint)(-1 * (int)nudGfxCO.Value))} ";
                 }
 
-                if (cbCCD1Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD1Core1.Value & 0xFFFF)} ";
-                if (cbCCD1Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD1Core2.Value & 0xFFFF)} ";
-                if (cbCCD1Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD1Core3.Value & 0xFFFF)} ";
-                if (cbCCD1Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD1Core4.Value & 0xFFFF)} ";
-                if (cbCCD1Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD1Core5.Value & 0xFFFF)} ";
-                if (cbCCD1Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD1Core6.Value & 0xFFFF)} ";
-                if (cbCCD1Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD1Core7.Value & 0xFFFF)} ";
-                if (cbCCD1Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((0 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD1Core8.Value & 0xFFFF)} ";
+                if (cbCCD1Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 0, (int)nudCCD1Core1.Value)} ";
+                if (cbCCD1Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 1, (int)nudCCD1Core2.Value)} ";
+                if (cbCCD1Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 2, (int)nudCCD1Core3.Value)} ";
+                if (cbCCD1Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 3, (int)nudCCD1Core4.Value)} ";
+                if (cbCCD1Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 4, (int)nudCCD1Core5.Value)} ";
+                if (cbCCD1Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 5, (int)nudCCD1Core6.Value)} ";
+                if (cbCCD1Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 6, (int)nudCCD1Core7.Value)} ";
+                if (cbCCD1Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 7, (int)nudCCD1Core8.Value)} ";
+                if (cbCCD1Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 8, (int)nudCCD1Core9.Value)} ";
+                if (cbCCD1Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 9, (int)nudCCD1Core10.Value)} ";
+                if (cbCCD1Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 10, (int)nudCCD1Core11.Value)} ";
+                if (cbCCD1Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(0, 11, (int)nudCCD1Core12.Value)} ";
 
-                if (cbCCD2Core1.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 0 % 8 & 15) << 20 | ((int)nudCCD2Core1.Value & 0xFFFF)} ";
-                if (cbCCD2Core2.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 1 % 8 & 15) << 20 | ((int)nudCCD2Core2.Value & 0xFFFF)} ";
-                if (cbCCD2Core3.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 2 % 8 & 15) << 20 | ((int)nudCCD2Core3.Value & 0xFFFF)} ";
-                if (cbCCD2Core4.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 3 % 8 & 15) << 20 | ((int)nudCCD2Core4.Value & 0xFFFF)} ";
-                if (cbCCD2Core5.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 4 % 8 & 15) << 20 | ((int)nudCCD2Core5.Value & 0xFFFF)} ";
-                if (cbCCD2Core6.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 5 % 8 & 15) << 20 | ((int)nudCCD2Core6.Value & 0xFFFF)} ";
-                if (cbCCD2Core7.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 6 % 8 & 15) << 20 | ((int)nudCCD2Core7.Value & 0xFFFF)} ";
-                if (cbCCD2Core8.IsChecked == true) commandValues = commandValues + $"--set-coper={((1 << 4 | 0 % 1 & 15) << 4 | 7 % 8 & 15) << 20 | ((int)nudCCD2Core8.Value & 0xFFFF)} ";
+                if (cbCCD2Core1.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 0, (int)nudCCD2Core1.Value)} ";
+                if (cbCCD2Core2.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 1, (int)nudCCD2Core2.Value)} ";
+                if (cbCCD2Core3.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 2, (int)nudCCD2Core3.Value)} ";
+                if (cbCCD2Core4.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 3, (int)nudCCD2Core4.Value)} ";
+                if (cbCCD2Core5.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 4, (int)nudCCD2Core5.Value)} ";
+                if (cbCCD2Core6.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 5, (int)nudCCD2Core6.Value)} ";
+                if (cbCCD2Core7.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 6, (int)nudCCD2Core7.Value)} ";
+                if (cbCCD2Core8.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 7, (int)nudCCD2Core8.Value)} ";
+                if (cbCCD2Core9.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 8, (int)nudCCD2Core9.Value)} ";
+                if (cbCCD2Core10.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 9, (int)nudCCD2Core10.Value)} ";
+                if (cbCCD2Core11.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 10, (int)nudCCD2Core11.Value)} ";
+                if (cbCCD2Core12.IsChecked == true) commandValues += $"--set-coper={BuildCoperArg(1, 11, (int)nudCCD2Core12.Value)} ";
 
                 if (tsAmdOC.IsChecked == true)
                 {
@@ -1285,12 +1332,26 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 else commandValues = commandValues + $"--ADLX-Sync=0-false --ADLX-Sync=1-false ";
             }
 
-            if (tsNV.IsChecked == true) commandValues = commandValues + $"--NVIDIA-Clocks={nudNVMaxCore.Value}-{nudNVCore.Value}-{nudNVMem.Value} ";
+            if (tsNV.IsChecked == true) commandValues = commandValues + $"--NVIDIA-Clocks={nudNVMaxCore.Value}-{nudNVCore.Value}-{nudNVMem.Value}-{nudNVPower.Value} ";
 
             if (sdCcdAffinity.Visibility == Visibility.Visible) commandValues = commandValues + $"--CCD-Affinity={cbxCcdAffinity.SelectedIndex} ";
 
             return commandValues;
         }
+
+        private static uint BuildCoperArg(int ccd, int core, int offset)
+        {
+            int magnitude = Math.Min(Math.Abs(offset), 0xFFFFF);
+
+            uint encoded20 =
+                offset < 0
+                    ? (uint)((0x100000 - magnitude) & 0xFFFFF)
+                    : (uint)(magnitude & 0xFFFFF);
+
+            uint prefix = (uint)((((ccd << 4) | (0 % 1 & 15)) << 4 | (core % 8 & 15)) << 20);
+            return prefix | encoded20;
+        }
+
 
         public bool IsScrollBarVisible(ScrollViewer scrollViewer)
         {

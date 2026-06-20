@@ -1,18 +1,24 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using OpenLibSys;
-using System.Reflection;
-using Universal_x86_Tuning_Utility.Scripts;
-using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using System.Windows;
+using Universal_x86_Tuning_Utility.Properties;
+using Universal_x86_Tuning_Utility.Scripts;
+using Universal_x86_Tuning_Utility.Scripts.AMD_Backend;
 using Universal_x86_Tuning_Utility.Scripts.GPUs.AMD;
+using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
+using Windows.Storage;
+using static RyzenSmu.RyzenSMU;
 
 [assembly: CLSCompliant(false)]
 
@@ -35,7 +41,7 @@ namespace RyzenSmu
             if (Family.FAM == Family.RyzenFamily.Mendocino || Family.FAM == Family.RyzenFamily.Rembrandt || Family.FAM == Family.RyzenFamily.PhoenixPoint || Family.FAM == Family.RyzenFamily.PhoenixPoint2 || Family.FAM == Family.RyzenFamily.HawkPoint || Family.FAM == Family.RyzenFamily.HawkPoint2 || Family.FAM == Family.RyzenFamily.StrixPoint || Family.FAM == Family.RyzenFamily.KrackanPoint || Family.FAM == Family.RyzenFamily.KrackanPoint2 || Family.FAM == Family.RyzenFamily.StrixHalo) Socket_FT6_FP7_FP8();
             if (Family.FAM == Family.RyzenFamily.Raphael || Family.FAM == Family.RyzenFamily.DragonRange || Family.FAM == Family.RyzenFamily.GraniteRidge || Family.FAM == Family.RyzenFamily.FireRange) Socket_AM5_V1();
 
-            SMUCommands.RyzenAccess.Initialize();
+            SMUCommands.RyzenAccess.Initialise();
         }
 
         private static void Socket_FT5_FP5_AM4()
@@ -50,39 +56,85 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true, 0x1a), // Use MP1 address
-                ("stapm-time",true , 0x1e), 
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x06),
+                ("stapm-limit",true, 0x1a),
+                ("stapm-limit",false, 0x2e),
+                ("stapm-time",true , 0x1e),
+                ("stapm-time",false , 0x32),
                 ("fast-limit",true , 0x1b),
+                ("fast-limit",false , 0x30),
                 ("slow-limit",true , 0x1c),
+                ("slow-limit",false , 0x2f),
                 ("slow-time",true , 0x1d),
+                ("slow-time",false , 0x31),
                 ("tctl-temp",true , 0x1f),
-                ("cHTC-temp",false , 0x56), // Use RSMU address
+                ("tctl-temp",false , 0x33),
+                ("cHTC-temp",false , 0x56),
                 ("vrm-current",true , 0x20),
+                ("vrm-current",false , 0x34),
                 ("vrmmax-current",true , 0x22),
+                ("vrmmax-current",false , 0x36),
                 ("vrmsoc-current",true , 0x21),
+                ("vrmsoc-current",false , 0x35),
                 ("vrmsocmax-current",true , 0x23),
-                ("prochot-deassertion-ramp",true , 0x25),
-                ("pbo-scalar",false , 0x68),
+                ("vrmsocmax-current",false , 0x37),
+                ("psi0-current",true , 0x24),
+                ("psi0-current",false , 0x38),
+                ("psi0soc-current",true , 0x25),
+                ("psi0soc-current",false , 0x39),
+                ("prochot-deassertion-ramp",true , 0x26),
+                ("prochot-deassertion-ramp",false , 0x3a),
                 ("power-saving",true , 0x19),
                 ("max-performance",true , 0x18),
+                ("enable-oc",true , 0x58),
+                ("disable-oc",true , 0x3f),
                 ("oc-clk",false , 0x7d),
                 ("per-core-oc-clk",false , 0x7e),
-                ("oc-volt",false , 0x7f),
-                ("enable-oc",false , 0x69),
-                ("disable-oc",false , 0x6a),
+                ("oc-clk",true , 0x59),
+                ("per-core-oc-clk",true , 0x5a),
+                ("oc-clk",true , 0x41),
+                ("oc-volt",true , 0x5b),
+                ("oc-volt",false , 0x7c),
+                ("oc-volt",true , 0x40),
+                ("set-gpuclockoverdrive-byvid",true , 0x3d),
+                ("set-gpuclockoverdrive-byvid",false , 0x61),
+                ("pbo-scalar",true , 0x57),
+                ("pbo-scalar",false , 0x63),
+                ("get-pbo-scalar",false , 0x62),
                 ("max-cpuclk",true, 0x44),
                 ("min-cpuclk",true, 0x45),
                 ("max-gfxclk",true, 0x46),
+                ("max-gfxclk",false, 0x68),
                 ("min-gfxclk",true, 0x47),
+                ("min-gfxclk",false, 0x69),
                 ("max-socclk-frequency",true, 0x48),
+                ("max-socclk-frequency",false, 0x66),
                 ("min-socclk-frequency",true, 0x49),
+                ("min-socclk-frequency",false, 0x67),
                 ("max-fclk-frequency",true, 0x4a),
                 ("min-fclk-frequency",true, 0x4b),
                 ("max-vcn",true, 0x4c),
                 ("min-vcn",true, 0x4d),
                 ("max-lclk",true, 0x4e),
                 ("min-lclk",true, 0x4f),
+                ("set-coper",false, 0x58),
+                ("set-coall",false, 0x59),
+                ("set-cogfx",false, 0x59),
+                ("setcpu-freqto-ramstate",true , 0x2f),
+                ("stopcpu-freqto-ramstate",true , 0x30),
+                ("stopcpu-freqto-ramstate",true , 0x31),
+                ("set-ulv-vid",true , 0x35),
+                ("set-vddoff-vid",true , 0x3a),
+                ("set-vmin-freq",true , 0x3b),
+                ("get-sustained-power-and-thm-limit",true , 0x43),
+                ("get-sustained-power-and-thm-limit",false , 0x65),
+                ("get-pbo-fused-power-limit",false , 0x7F),
+                ("get-pbo-fused-slow-limit",false , 0x80),
+                ("get-pbo-fused-fast-limit",false , 0x81),
+                ("get-pbo-fused-apu-slow-limit",false , 0x82),
+                ("get-pbo-fused-vrmtdc-limit",false , 0x83),
+                ("get-pbo-fused-vrmsoc-current",false , 0x84)
             };
         }
 
@@ -98,42 +150,74 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true , 0x14), // Use MP1 address
-                //("stapm-limit",false , 0x31), // Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit",true , 0x14),
+                ("stapm-limit",false , 0x31),
                 ("ppt-limit",false , 0x33),
                 ("stapm-time",true , 0x18),
+                ("stapm-time",false , 0x36),
                 ("fast-limit",true , 0x15),
+                ("fast-limit",false , 0x32),
                 ("slow-limit",true , 0x16),
+                ("slow-limit",false , 0x33),
                 ("slow-time",true , 0x17),
+                ("slow-time",false , 0x35),
                 ("tctl-temp",true , 0x19),
                 ("cHTC-temp",false , 0x37),
                 ("apu-skin-temp",true , 0x38),
+                ("apu-skin-temp",false , 0x91),
+                ("dgpu-skin-temp",true , 0x39),
+                ("dgpu-skin-temp",false , 0x92),
                 ("vrm-current",true , 0x1a),
+                ("vrm-current",false , 0x38),
                 ("vrmmax-current",true , 0x1c),
+                ("vrmmax-current",false , 0x3a),
                 ("vrmsoc-current",true , 0x1b),
+                ("vrmsoc-current",false , 0x39),
                 ("vrmsocmax-current",true , 0x1d),
+                ("vrmsocmax-current",false , 0x3b),
+                ("psi0-current",true , 0x1e),
+                ("psi0-current",false , 0x3c),
+                ("psi0soc-current",true , 0x1f),
+                ("psi0soc-current",false , 0x3d),
                 ("prochot-deassertion-ramp",true , 0x20),
-                ("gfx-clk",false , 0x89),
-                ("dgpu-skin-temp",true , 0x37),
+                ("prochot-deassertion-ramp",false , 0x3e),
+                ("skin-temp-limit",true , 0x53),
+                ("apu-slow-limit",true , 0x21),
+                ("apu-slow-limit",false , 0x34),
                 ("power-saving",true , 0x12),
                 ("max-performance",true , 0x11),
-                ("pbo-scalar",false , 0x3F),
-                ("oc-clk",false , 0x19),
-                ("oc-clk",true , 0x31),
-                ("per-core-oc-clk",false , 0x1a),
-                ("per-core-oc-clk",true , 0x32),
-                ("oc-volt",false , 0x1b),
-                ("oc-volt",true , 0x33),
-                ("set-coall",true , 0x55),
-                ("set-coall",false , 0xB1),
-                ("set-coper",true , 0x54),
-                ("set-cogfx",true , 0x64),
-                ("set-cogfx",false , 0x57),
                 ("enable-oc",false , 0x17),
                 ("enable-oc",true , 0x2f),
                 ("disable-oc",false , 0x18),
-                ("disable-oc",true , 0x30)
+                ("disable-oc",true , 0x30),
+                ("oc-clk",true , 0x31),
+                ("oc-clk",false , 0x19),
+                ("per-core-oc-clk",true , 0x32),
+                ("per-core-oc-clk",false , 0x1a),
+                ("oc-volt",true , 0x33),
+                ("oc-volt",false , 0x1b),
+                ("set-gpuclockoverdrive-byvid",true , 0x34),
+                ("gfx-clk",false , 0x89),
+                ("gfx-clk",false , 0x1c),
+                ("pbo-scalar",true , 0x49),
+                ("pbo-scalar",false , 0x3f),
+                ("get-pbo-scalar",false , 0x0f),
+                ("set-cogfx",false , 0x53),
+                ("set-coper",true , 0x54),
+                ("set-coper",false , 0x52),
+                ("set-coall",true , 0x55),
+                ("set-coall",false , 0xB1),
+                ("get-coper-options",false , 0xC3),
+                ("get-cogfx-options",false , 0xC6),
+                ("get-sustained-power-and-thm-limit",true , 0x5b),
+                ("get-pbo-fused-power-limit",false , 0x11),
+                ("get-pbo-fused-slow-limit",false , 0x12),
+                ("get-pbo-fused-fast-limit",false , 0x13),
+                ("get-pbo-fused-apu-slow-limit",false , 0x14),
+                ("get-pbo-fused-vrmtdc-limit",false , 0x15),
+                ("get-pbo-fused-vrmsoc-current",false , 0x16)
             };
         }
 
@@ -162,36 +246,68 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit", true, 0x14), // Use MP1 address
-                ("stapm-limit", false, 0x31),// Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit", true, 0x14),
+                ("stapm-limit", false, 0x31),
                 ("stapm-time", true, 0x18),
+                ("stapm-time", false, 0x36),
                 ("fast-limit", true, 0x15),
                 ("fast-limit", false, 0x32),
                 ("slow-limit", true, 0x16),
                 ("slow-limit", false, 0x33),
                 ("slow-time", true, 0x17),
+                ("slow-time", false, 0x35),
                 ("tctl-temp", true, 0x19),
+                ("cHTC-temp", true, 0x63),
                 ("cHTC-temp", false, 0x37),
-                ("apu-skin-temp", true, 0x33),
                 ("vrm-current", true, 0x1a),
+                ("vrm-current", false, 0x38),
                 ("vrmmax-current", true, 0x1c),
+                ("vrmmax-current", false, 0x3a),
                 ("vrmsoc-current", true, 0x1b),
-                ("vrmsocmax-current", true ,0x1d),
-                ("prochot-deassertion-ramp", true, 0x1f),
-                ("gfx-clk", false, 0x89),
-                ("dgpu-skin-temp", true, 0x32),
-                ("power-saving", true, 0x12),
+                ("vrmsoc-current", false, 0x39),
+                ("vrmsocmax-current", true, 0x1d),
+                ("vrmsocmax-current", false, 0x3b),
+                ("psi0-current", true, 0x1e),
+                ("psi0-current", false, 0x3c),
+                ("psi0soc-current", true, 0x1f),
+                ("psi0soc-current", false, 0x3d),
+                ("psi3cpu_current", true, 0x20),
+                ("psi3gfx_current", true, 0x21),
+                ("prochot-deassertion-ramp", true, 0x22),
+                ("skin-temp-limit", true, 0x4a),
+                ("apu-slow-limit", true, 0x23),
+                ("apu-slow-limit", false, 0x34),
+                ("apu-skin-temp", true, 0x33),
+                ("apu-skin-temp", false, 0x91),
+                ("dgpu-skin-temp", true, 0x34),
+                ("dgpu-skin-temp", false, 0x92),
                 ("max-performance", true, 0x11),
-                ("pbo-scalar", false, 0x3E),
-                ("oc-clk",  false, 0x19),
+                ("power-saving", true, 0x12),
+                ("enable-oc", false, 0x17),
+                ("disable-oc", false, 0x18),
+                ("oc-clk", false, 0x19),
                 ("per-core-oc-clk", false, 0x1a),
-                ("set-coall",   true, 0x4c),
-                ("set-coall",   false, 0x5d),
-                ("set-coper",   true, 0x4b),
-                ("set-cogfx",   false, 0xb7),
-                ("enable-oc",   false, 0x17),
-                ("disable-oc",  false, 0x18)
+                ("oc-volt", false, 0x1b),
+                ("gfx-clk", false, 0x89),
+                ("gfx-clk", false, 0x1c),
+                ("pbo-scalar", false, 0x3e),
+                ("get-pbo-scalar", false, 0x0f),
+                ("set-cogfx", false, 0xb7),
+                ("set-coper", true, 0x4b),
+                ("set-coper", false, 0x53),
+                ("set-coall", true, 0x4c),
+                ("set-coall", false, 0x5d),
+                ("get-coper-options", false, 0xE1),
+                ("get-sustained-power-and-thm-limit", true, 0x5f),
+                ("get-pbo-fused-power-limit", false, 0x11),
+                ("get-pbo-fused-slow-limit", false, 0x12),
+                ("get-pbo-fused-fast-limit", false, 0x13),
+                ("get-pbo-fused-apu-slow-limit", false, 0x14),
+                ("get-pbo-fused-vrmtdc-limit", false, 0x15),
+                ("get-pbo-fused-vrmsoc-current", false, 0x16),
+                ("get-pbo-fused-tctl-temp", false, 0xE5)
             };
         }
 
@@ -207,9 +323,10 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("stapm-limit",true, 0x14), // Use MP1 address
-                //("stapm-limit",false , 0x31), // Use RSMU address
+                ("enable-feature",true, 0x05),
+                ("disable-feature",true, 0x07),
+                ("stapm-limit",true, 0x14),
+                ("stapm-limit",false , 0x31),
                 ("stapm-time",true , 0x18),
                 ("fast-limit",true , 0x15),
                 ("slow-limit",true , 0x16),
@@ -225,12 +342,16 @@ namespace RyzenSmu
                 ("vrmgfxmax-current",true , 0x1f),
                 ("prochot-deassertion-ramp",true , 0x22),
                 ("gfx-clk",false , 0x89),
+                ("gfx-clk",false , 0x1c),
                 ("power-saving",true , 0x12),
                 ("max-performance",true , 0x11),
                 ("set-coall",true , 0x4c),
                 ("set-coall",false , 0x5d),
                 ("set-coper",true , 0x4b),
-                ("set-cogfx",false , 0xb7)
+                ("set-cogfx",false , 0xb7),
+                ("get-sustained-power-and-thm-limit",true , 0x54),
+                ("skin-temp-limit",true , 0x4a),
+                ("apu-slow-limit",true , 0x23)
             };
         }
 
@@ -246,18 +367,24 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("ppt-limit",false, 0x64), // Use RSMU address
+                ("ppt-limit",false, 0x64),
+                ("ppt-limit",true, 0x31),
                 ("tdc-limit",false , 0x65),
                 ("edc-limit",false , 0x66),
                 ("tctl-temp",false , 0x68),
                 ("pbo-scalar",false , 0x6a),
                 ("oc-clk", false, 0x6c),
+                ("oc-clk", true, 0x39),
                 ("per-core-oc-clk",false , 0x6d),
                 ("oc-volt", false, 0x6e),
+                ("oc-volt", true, 0x38),
                 ("enable-oc",true , 0x23),
                 ("enable-oc",false , 0x6b),
                 ("disable-oc",true , 0x24),
+                ("get-sustained-power-and-thm-limit",true , 0x36),
+                ("setcpu-freqto-ramstate",true , 0x23),
+                ("stopcpu-freqto-ramstate",true , 0x24),
+                ("stopcpu-freqto-ramstate",true , 0x25)
             };
         }
 
@@ -273,9 +400,10 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
-                ("ppt-limit",true, 0x3D), // Use MP1 address
-                ("ppt-limit",false, 0x53), // Use RSMU address
+                ("enable-feature",true, 0x03),
+                ("disable-feature",true, 0x04),
+                ("ppt-limit",true, 0x3D),
+                ("ppt-limit",false, 0x53),
                 ("tdc-limit",true , 0x3B),
                 ("tdc-limit",false , 0x54),
                 ("edc-limit",true , 0x3c),
@@ -292,11 +420,18 @@ namespace RyzenSmu
                 ("set-coall", true, 0x36),
                 ("set-coall", false, 0xb),
                 ("set-coper", true, 0x35),
+                ("set-coper", false, 0x0a),
                 ("enable-oc",true , 0x24),
                 ("enable-oc",false , 0x5a),
                 ("disable-oc",true , 0x25),
                 ("disable-oc",false , 0x5b),
+                ("set-boost-limit-frequency",true , 0x2b),
+                ("get-pbo-scalar",false , 0x6c),
+                ("get-sustained-power-and-thm-limit",true , 0x23),
+                ("get-overclocking-support",false , 0x6f),
+                ("get-coper-options",false , 0x7c)
             };
+
         }
 
         private static void Socket_AM5_V1()
@@ -311,16 +446,17 @@ namespace RyzenSmu
 
             SMUCommands.commands = new List<(string, bool, uint)>
             {
-                // Store the commands
+                ("enable-feature",true, 0x03), // Use MP1 address
+                ("disable-feature",true, 0x04),
                 ("stapm-limit",true, 0x4f),
                 ("stapm-time",true , 0x53),
                 ("fast-limit",true , 0x3e),
                 ("slow-limit",true , 0x5f),
                 ("slow-time",true , 0x60),
                 ("vrm-current",true , 0x3c),
-                ("vrm-current",false , 0x57),
-                ("ppt-limit",true, 0x3e), // Use MP1 address
-                ("ppt-limit",false, 0x56), // Use RSMU address
+                ("vrm-current",false , 0x57), // Use RSMU address
+                ("ppt-limit",true, 0x3e),
+                ("ppt-limit",false, 0x56),
                 ("tdc-limit",true , 0x3c),
                 ("tdc-limit",false , 0x57),
                 ("edc-limit",true , 0x3d),
@@ -335,6 +471,33 @@ namespace RyzenSmu
                 ("set-coper", false, 0x6),
                 ("enable-oc",false , 0x5d),
                 ("disable-oc",false , 0x5e),
+                ("slow-limit",false , 0xcb),
+                ("skin-temp-limit",true , 0x5e),
+                ("apu-slow-limit",true , 0x60),
+                ("vrmmax-current",true , 0x3d),
+                ("vrmmax-current",false , 0x58),
+                ("cHTC-temp",false , 0x59),
+                ("get-pbo-scalar",false , 0x6d),
+                ("set-cogfx",false , 0xA7),
+                ("set-coall",true , 0x36),
+                ("set-coper",true , 0x35),
+                ("set-boost-limit-frequency",true , 0x2b),
+                ("set-vddoff-vid",true , 0x4b),
+                ("set-fll-btc-enable",true , 0x37),
+                ("get-sustained-power-and-thm-limit",true , 0x23),
+                ("get-overclocking-support",false , 0x6f),
+                ("get-max-cpu-clk",false , 0x6e),
+                ("get-min-gfx-clk",false , 0xCe),
+                ("get-max-gfx-clk",false , 0xCf),
+                ("get-curr-gfx-clk",false , 0xD8),
+                ("disable-prochot",false , 0x5d),
+                ("get-coper-options",false , 0xD5),
+                ("get-cogfx-options",false , 0xD7),
+                ("get-pbo-fused-vrmsoc-current",false , 0xD9),
+                ("get-pbo-fused-vrmtdc-limit",false , 0xDb),
+                ("get-pbo-fused-slow-limit",false , 0xDc),
+                ("get-pbo-fused-apu-slow-limit",false , 0xDa),
+                ("get-pbo-fused-tctl-temp",false , 0xDe)
             };
         }
     }
@@ -343,7 +506,7 @@ namespace RyzenSmu
     {
         public static List<(string, bool, uint)> commands;
 
-        public static Smu RyzenAccess = new Smu(false);
+        public static Smu RyzenAccess = new Smu();
 
         public static void applySettings(string commandName, uint value)
         {
@@ -369,107 +532,82 @@ namespace RyzenSmu
             }
             else throw new ArgumentException($"Command '{commandName}' not found");
         }
+
+
+        public static void disableFeature(uint[] Args)
+        {
+            var matchingCommands = commands.Where(c => c.Item1 == "disable-feature");
+            if (matchingCommands.Count() > 0)
+            {
+                List<Task> tasks = new List<Task>();
+                foreach (var command in matchingCommands)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        if (command.Item2 == true) RyzenAccess.SendMp1(command.Item3, ref Args);
+                        else RyzenAccess.SendRsmu(command.Item3, ref Args);
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            else throw new ArgumentException($"Command not found");
+        }
+
+        public static void enableFeature(uint[] Args)
+        {
+            var matchingCommands = commands.Where(c => c.Item1 == "enable-feature");
+            if (matchingCommands.Count() > 0)
+            {
+                List<Task> tasks = new List<Task>();
+                foreach (var command in matchingCommands)
+                {
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        if (command.Item2 == true) RyzenAccess.SendMp1(command.Item3, ref Args);
+                        else RyzenAccess.SendRsmu(command.Item3, ref Args);
+                    }));
+                }
+
+                Task.WaitAll(tasks.ToArray());
+            }
+            else throw new ArgumentException($"Command not found");
+        }
     }
 
     class Smu
     {
-        public enum Status : int
+        public static RyzenSMU ryzenSMU;
+        public static AMDPawnIo pawnIo;
+
+        public void Initialise()
         {
-            BAD = 0x0,
-            OK = 0x1,
-            FAILED = 0xFF,
-            UNKNOWN_CMD = 0xFE,
-            CMD_REJECTED_PREREQ = 0xFD,
-            CMD_REJECTED_BUSY = 0xFC
-        }
+            string modulePath = Path.Combine(
+                Settings.Default.Path,
+                "Assets",
+                "AMD",
+                "PawnIO",
+                "RyzenSMU.bin");
 
-        private static readonly Dictionary<Smu.Status, String> status = new Dictionary<Smu.Status, string>()
-        {
-            { Smu.Status.BAD, "BAD" },
-            { Smu.Status.OK, "OK" },
-            { Smu.Status.FAILED, "Failed" },
-            { Smu.Status.UNKNOWN_CMD, "Unknown Command" },
-            { Smu.Status.CMD_REJECTED_PREREQ, "CMD Rejected Prereq" },
-            { Smu.Status.CMD_REJECTED_BUSY, "CMD Rejected Busy" }
-        };
+            pawnIo = AMDPawnIo.LoadModuleFromFile(modulePath);
 
-        Ols RyzenNbAccesss = new Ols();
-
-        public Smu(bool EnableDebug)
-        {
-            ShowDebug = EnableDebug;
-
-            // Check WinRing0 status
-            switch (RyzenNbAccesss.GetDllStatus())
+            if (!pawnIo.IsLoaded)
             {
-                case (uint)Ols.OlsDllStatus.OLS_DLL_NO_ERROR:
-                    if (ShowDebug)
-                    {
-                        //MessageBox.Show("Ols Dll is OK.", "Ols.OlsDllStatus:");
-                    }
-                    break;
-                case (uint)Ols.OlsDllStatus.OLS_DLL_DRIVER_NOT_LOADED:
-                    //MessageBox.Show("WinRing OLS_DRIVER_NOT_LOADED", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing OLS_DRIVER_NOT_LOADED");
-
-                case (uint)Ols.OlsDllStatus.OLS_DLL_UNSUPPORTED_PLATFORM:
-                    //MessageBox.Show("WinRing OLS_UNSUPPORTED_PLATFORM", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing OLS_UNSUPPORTED_PLATFORM");
-
-                case (uint)Ols.OlsDllStatus.OLS_DLL_DRIVER_NOT_FOUND:
-                    //MessageBox.Show("WinRing OLS_DLL_DRIVER_NOT_FOUND", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing OLS_DLL_DRIVER_NOT_FOUND");
-
-                case (uint)Ols.OlsDllStatus.OLS_DLL_DRIVER_UNLOADED:
-                    //MessageBox.Show("WinRing OLS_DLL_DRIVER_UNLOADED", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing OLS_DLL_DRIVER_UNLOADED");
-
-                case (uint)Ols.OlsDllStatus.OLS_DLL_DRIVER_NOT_LOADED_ON_NETWORK:
-                    //MessageBox.Show("WinRing DRIVER_NOT_LOADED_ON_NETWORK", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing DRIVER_NOT_LOADED_ON_NETWORK");
-
-                case (uint)Ols.OlsDllStatus.OLS_DLL_UNKNOWN_ERROR:
-                    //MessageBox.Show("WinRing OLS_DLL_UNKNOWN_ERROR", "Ols.OlsDllStatus:");
-                    throw new ApplicationException("WinRing OLS_DLL_UNKNOWN_ERROR");
+                Console.WriteLine("PawnIo failed to load.");
+                return;
             }
 
-        }
-
-        public void Initialize()
-        {
-            amdSmuMutex = new Mutex();
-            RyzenNbAccesss.InitializeOls();
-
-            // Check WinRing0 status
-            switch (RyzenNbAccesss.GetStatus())
-            {
-                case (uint)Ols.Status.NO_ERROR:
-                    if (ShowDebug)
-                    {
-                        //MessageBox.Show("Ols is OK.", "Ols.Status:");
-                        ShowDebug = false;
-                    }
-                    break;
-                case (uint)Ols.Status.DLL_NOT_FOUND:
-                    //MessageBox.Show("WinRing Status: DLL_NOT_FOUND", "Ols.Status:");
-                    throw new ApplicationException("WinRing DLL_NOT_FOUND");
-                    break;
-                case (uint)Ols.Status.DLL_INCORRECT_VERSION:
-                    //MessageBox.Show("WinRing Status: DLL_INCORRECT_VERSION", "Ols.Status:");
-                    throw new ApplicationException("WinRing DLL_INCORRECT_VERSION");
-                    break;
-                case (uint)Ols.Status.DLL_INITIALIZE_ERROR:
-                    //MessageBox.Show("WinRing Status: DLL_INITIALIZE_ERROR", "Ols.Status:");
-                    throw new ApplicationException("WinRing DLL_INITIALIZE_ERROR");
-                    break;
-                default:
-                    break;
-            }
+            ryzenSMU = new RyzenSMU(pawnIo);
+            ryzenSMU.Open();
         }
 
         public void Deinitialize()
         {
-            RyzenNbAccesss.DeinitializeOls();
+            if (pawnIo != null && pawnIo.IsLoaded)
+            {
+                ryzenSMU?.Close();
+                pawnIo.Close();
+            }
         }
 
         public static uint SMU_PCI_ADDR { get; set; }
@@ -483,115 +621,441 @@ namespace RyzenSmu
         public static uint PSMU_ADDR_MSG { get; set; }
         public static uint PSMU_ADDR_RSP { get; set; }
         public static uint PSMU_ADDR_ARG { get; set; }
-        public static uint[] args { get; set; }
 
-        public bool ShowDebug { get; set; }
-
-        private static Mutex amdSmuMutex;
-        private const ushort SMU_TIMEOUT = 8192;
 
         public Status SendMp1(uint message, ref uint[] arguments)
         {
-            return SendMsg(MP1_ADDR_MSG, MP1_ADDR_RSP, MP1_ADDR_ARG, message, ref arguments);
+            var mp1 = ryzenSMU.RegisterMailbox(
+                 name: "MP1",
+                 msgAddr: MP1_ADDR_MSG,
+                 rspAddr: MP1_ADDR_RSP,
+                 argAddr: MP1_ADDR_ARG,
+                 maxArgs: 6
+             );
+
+            return ryzenSMU.SendSmuCommand(mp1, message, ref arguments);
         }
 
         public Status SendRsmu(uint message, ref uint[] arguments)
         {
-            return SendMsg(PSMU_ADDR_MSG, PSMU_ADDR_RSP, PSMU_ADDR_ARG, message, ref arguments);
+            var rsmu = ryzenSMU.RegisterMailbox(
+                  name: "RSMU",
+                  msgAddr: PSMU_ADDR_MSG,
+                  rspAddr: PSMU_ADDR_RSP,
+                  argAddr: PSMU_ADDR_ARG,
+                  maxArgs: 6
+              );
+
+            return ryzenSMU.SendSmuCommand(rsmu, message, ref arguments);
         }
 
+    }
+    /// <summary>
+    /// High-level interface for sending commands to the AMD SMU via PawnIO.
+    /// Handles mutex co-ordination, mailbox selection, and argument flow.
+    /// </summary>
+    internal sealed class RyzenSMU : IDisposable
+    {
+        // PawnIO function names used for register access
+        private const string IOCTL_READ_SMU_REGISTER = "ioctl_read_smu_register";
+        private const string IOCTL_WRITE_SMU_REGISTER = "ioctl_write_smu_register";
 
-        public bool SendSmuCommand(uint SMU_ADDR_MSG, uint SMU_ADDR_RSP, uint SMU_ADDR_ARG, uint msg, ref uint[] args)
+        // Maximum number of polls whilst waiting for the SMU to respond
+        private const ushort POLL_LIMIT = 8192;
+
+        // Global mutex names.
+        private const string ISA_MUTEX_NAME = "Global\\Access_ISABUS.HTP.Method";
+        private const string PCI_MUTEX_NAME = "Global\\Access_PCI";
+
+        private readonly AMDPawnIo _pawnIo;
+
+        // Mutex handles owned by this instance
+        private Mutex? _isaMutex;
+        private Mutex? _pciMutex;
+
+        private bool _disposed;
+
+        // --------------------------------------------------------------------
+        // Mailbox handling
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Represents a single SMU mailbox (for example, MP1 or RSMU).
+        /// Addresses are fully configurable and may be changed at runtime.
+        /// </summary>
+        public sealed class Mailbox
         {
-            return (SendMsg(SMU_ADDR_MSG, SMU_ADDR_RSP, SMU_ADDR_ARG, msg, ref args) == Smu.Status.OK);
-        }
-
-        public Status SendMsg(uint SMU_ADDR_MSG, uint SMU_ADDR_RSP, uint SMU_ADDR_ARG, uint msg, ref uint[] args)
-        {
-            ushort timeout = SMU_TIMEOUT;
-            uint[] cmdArgs = new uint[6];
-            int argsLength = args.Length;
-            uint status = 0;
-
-            if (argsLength > cmdArgs.Length)
-                argsLength = cmdArgs.Length;
-
-            for (int i = 0; i < argsLength; ++i)
-                cmdArgs[i] = args[i];
-
-            if (amdSmuMutex.WaitOne(5000))
+            public Mailbox(string name, uint maxArgs = 6)
             {
-                // Clear response register
-                bool temp;
-                do
-                    temp = SmuWriteReg(SMU_ADDR_RSP, 0);
-                while ((!temp) && --timeout > 0);
-
-                if (timeout == 0)
-                {
-                    amdSmuMutex.ReleaseMutex();
-                    SmuReadReg(SMU_ADDR_RSP, ref status);
-                    return (Status)status;
-                }
-
-                // Write data
-                for (int i = 0; i < cmdArgs.Length; ++i)
-                    SmuWriteReg(SMU_ADDR_ARG + (uint)(i * 4), cmdArgs[i]);
-
-                // Send message
-                SmuWriteReg(SMU_ADDR_MSG, msg);
-
-                // Wait done
-                if (!SmuWaitDone(SMU_ADDR_RSP))
-                {
-                    amdSmuMutex.ReleaseMutex();
-                    SmuReadReg(SMU_ADDR_RSP, ref status);
-                    return (Status)status;
-                }
-
-                // Read back args
-                for (int i = 0; i < args.Length; ++i)
-                    SmuReadReg(SMU_ADDR_ARG + (uint)(i * 4), ref args[i]);
+                Name = string.IsNullOrWhiteSpace(name) ? "Unnamed" : name.Trim();
+                MAX_ARGS = maxArgs;
             }
 
-            amdSmuMutex.ReleaseMutex();
-            SmuReadReg(SMU_ADDR_RSP, ref status);
+            /// <summary>
+            /// Friendly name used for debugging/logging only.
+            /// </summary>
+            public string Name { get; }
 
-            return (Status)status;
+            public uint MAX_ARGS { get; set; }
+
+            public uint SMU_ADDR_MSG { get; set; }
+            public uint SMU_ADDR_RSP { get; set; }
+            public uint SMU_ADDR_ARG { get; set; }
+
+            public bool IsValid =>
+                MAX_ARGS > 0 &&
+                SMU_ADDR_MSG != 0 &&
+                SMU_ADDR_RSP != 0 &&
+                SMU_ADDR_ARG != 0;
         }
 
-        public bool SmuWaitDone(uint SMU_ADDR_RSP)
+        // Registered mailboxes by name (MP1, RSMU, etc.)
+        private readonly Dictionary<string, Mailbox> _mailboxes =
+            new(StringComparer.OrdinalIgnoreCase);
+
+        // Last command metadata (handy when diagnosing failures)
+        public string? LastMailboxName { get; private set; }
+        public uint LastCommand { get; private set; }
+        public Status LastStatus { get; private set; } = Status.FAILED;
+
+        public RyzenSMU(AMDPawnIo pawnIo)
         {
-            bool res;
-            ushort timeout = SMU_TIMEOUT;
-            uint data = 0;
-
-            do
-                res = SmuReadReg(SMU_ADDR_RSP, ref data);
-            while ((!res || data != 1) && --timeout > 0);
-
-            if (timeout == 0 || data != 1) res = false;
-
-            return res;
+            _pawnIo = pawnIo ?? throw new ArgumentNullException(nameof(pawnIo));
         }
 
-
-        private bool SmuWriteReg(uint addr, uint data)
+        /// <summary>
+        /// SMU-visible status codes only.
+        /// Transport or mutex failures are reported as FAILED.
+        /// </summary>
+        public enum Status : byte
         {
-            if (RyzenNbAccesss.WritePciConfigDwordEx(SMU_PCI_ADDR, SMU_OFFSET_ADDR, addr) == 1)
+            OK = 0x01,
+            FAILED = 0xFF,
+            UNKNOWN_CMD = 0xFE,
+            CMD_REJECTED_PREREQ = 0xFD,
+            CMD_REJECTED_BUSY = 0xFC
+        }
+
+        // --------------------------------------------------------------------
+        // Lifecycle
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Opens the global mutexes required for SMU access.
+        /// Safe to call multiple times.
+        /// </summary>
+        public void Open()
+        {
+            ThrowIfDisposed();
+
+            _isaMutex ??= CreateOrOpenMutex(ISA_MUTEX_NAME);
+            _pciMutex ??= CreateOrOpenMutex(PCI_MUTEX_NAME);
+        }
+
+        /// <summary>
+        /// Releases mutex handles owned by this instance.
+        /// </summary>
+        public void Close()
+        {
+            DisposeMutex(ref _isaMutex);
+            DisposeMutex(ref _pciMutex);
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            Close();
+            _disposed = true;
+        }
+
+        // --------------------------------------------------------------------
+        // Mailbox registration
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Registers (or replaces) a mailbox with a friendly name.
+        /// Useful for keeping a known set such as "MP1" and "RSMU".
+        /// </summary>
+        public Mailbox RegisterMailbox(
+            string name,
+            uint msgAddr,
+            uint rspAddr,
+            uint argAddr,
+            uint maxArgs = 6)
+        {
+            var mailbox = new Mailbox(name, maxArgs)
             {
-                return RyzenNbAccesss.WritePciConfigDwordEx(SMU_PCI_ADDR, SMU_OFFSET_DATA, data) == 1;
+                SMU_ADDR_MSG = msgAddr,
+                SMU_ADDR_RSP = rspAddr,
+                SMU_ADDR_ARG = argAddr
+            };
+
+            _mailboxes[mailbox.Name] = mailbox;
+            return mailbox;
+        }
+
+        // --------------------------------------------------------------------
+        // Public SMU command entry point
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Sends a command to the SMU using the specified mailbox.
+        /// On success, the SMU may overwrite values in the args array.
+        /// </summary>
+        public Status SendSmuCommand(Mailbox mailbox, uint message, ref uint[] args)
+        {
+            ThrowIfDisposed();
+
+            if (mailbox == null || !mailbox.IsValid || message == 0)
+            {
+                RememberDebug(mailbox, message, Status.UNKNOWN_CMD);
+                return Status.UNKNOWN_CMD;
             }
+
+            // Lazily open mutexes if the caller forgot
+            if (_pciMutex == null)
+                Open();
+
+            if (_pciMutex == null || !WaitForMutex(_pciMutex, 10))
+            {
+                RememberDebug(mailbox, message, Status.FAILED);
+                return Status.FAILED;
+            }
+
+            try
+            {
+                var status = ExecuteMailboxFlow(mailbox, message, ref args);
+                RememberDebug(mailbox, message, status);
+                return status;
+            }
+            catch
+            {
+                RememberDebug(mailbox, message, Status.FAILED);
+                return Status.FAILED;
+            }
+            finally
+            {
+                SafeReleaseMutex(_pciMutex);
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // Core mailbox protocol
+        // --------------------------------------------------------------------
+
+        private Status ExecuteMailboxFlow(Mailbox mb, uint msg, ref uint[] args)
+        {
+            // Ensure the mailbox is idle before starting
+            if (!WaitForResponse(mb.SMU_ADDR_RSP, out _))
+                return Status.FAILED;
+
+            // Clear response register
+            if (!Write32(mb.SMU_ADDR_RSP, 0))
+                return Status.FAILED;
+
+            // Write input arguments
+            if (!WriteArguments(mb, args))
+                return Status.FAILED;
+
+            // Send command
+            if (!Write32(mb.SMU_ADDR_MSG, msg))
+                return Status.FAILED;
+
+            // Wait for completion
+            if (!WaitForResponse(mb.SMU_ADDR_RSP, out uint rsp))
+                return Status.FAILED;
+
+            // The response register should contain a byte-sized status code
+            if (rsp > byte.MaxValue)
+                return Status.FAILED;
+
+            Status status = unchecked((Status)rsp);
+
+            // Read back arguments only on success
+            if (status == Status.OK && args != null && args.Length > 0)
+            {
+                if (!ReadArguments(mb, ref args))
+                    return Status.FAILED;
+            }
+
+            return status;
+        }
+
+        private bool WaitForResponse(uint rspReg, out uint value)
+        {
+            value = 0;
+
+            for (ushort i = 0; i < POLL_LIMIT; i++)
+            {
+                if (Read32(rspReg, out value) && value != 0)
+                    return true;
+            }
+
             return false;
         }
 
-        private bool SmuReadReg(uint addr, ref uint data)
+        private bool WriteArguments(Mailbox mb, uint[] args)
         {
-            if (RyzenNbAccesss.WritePciConfigDwordEx(SMU_PCI_ADDR, SMU_OFFSET_ADDR, addr) == 1)
+            uint[] payload = PrepareArguments(args, mb.MAX_ARGS);
+
+            // Guard against overflow when calculating base + (index * 4)
+            uint maxSafe = uint.MaxValue - (mb.MAX_ARGS * 4);
+
+            for (int i = 0; i < payload.Length; i++)
             {
-                return RyzenNbAccesss.ReadPciConfigDwordEx(SMU_PCI_ADDR, SMU_OFFSET_DATA, ref data) == 1;
+                uint reg = mb.SMU_ADDR_ARG + (uint)(i * 4);
+                if (reg > maxSafe)
+                    continue;
+
+                if (!Write32(reg, payload[i]))
+                    return false;
             }
-            return false;
+
+            return true;
+        }
+
+        private bool ReadArguments(Mailbox mb, ref uint[] args)
+        {
+            int count = Math.Min(args.Length, (int)mb.MAX_ARGS);
+
+            // Same overflow guard as above
+            uint maxSafe = uint.MaxValue - (mb.MAX_ARGS * 4);
+
+            for (int i = 0; i < count; i++)
+            {
+                uint reg = mb.SMU_ADDR_ARG + (uint)(i * 4);
+                if (reg > maxSafe)
+                    continue;
+
+                if (!Read32(reg, out uint value))
+                    return false;
+
+                args[i] = value;
+            }
+
+            return true;
+        }
+
+        // --------------------------------------------------------------------
+        // Low-level register access
+        // --------------------------------------------------------------------
+
+        private bool Read32(uint reg, out uint value)
+        {
+            value = 0;
+
+            long[] inBuf = { unchecked((long)reg) };
+            long[] outBuf = new long[1];
+
+            int hr = _pawnIo.ExecuteHr(IOCTL_READ_SMU_REGISTER, inBuf, 1, outBuf, 1, out _);
+            if (hr != 0)
+                return false;
+
+            value = unchecked((uint)outBuf[0]);
+            return true;
+        }
+
+        private bool Write32(uint reg, uint value)
+        {
+            long[] inBuf = { unchecked((long)reg), unchecked((long)value) };
+
+            int hr = _pawnIo.ExecuteHr(
+                IOCTL_WRITE_SMU_REGISTER,
+                inBuf,
+                2,
+                Array.Empty<long>(),
+                0,
+                out _);
+
+            return hr == 0;
+        }
+
+        private static uint[] PrepareArguments(uint[] args, uint maxArgs)
+        {
+            uint[] result = new uint[maxArgs];
+
+            if (args == null || args.Length == 0)
+                return result;
+
+            int copy = Math.Min(args.Length, (int)maxArgs);
+            for (int i = 0; i < copy; i++)
+                result[i] = args[i];
+
+            return result;
+        }
+
+        // --------------------------------------------------------------------
+        // Mutex helpers
+        // --------------------------------------------------------------------
+
+        private static Mutex? CreateOrOpenMutex(string name)
+        {
+            try
+            {
+                var security = BuildWorldWritableSecurity();
+#if NETFRAMEWORK
+                return new Mutex(false, name, out _, security);
+#else
+                return MutexAcl.Create(false, name, out _, security);
+#endif
+            }
+            catch (UnauthorizedAccessException)
+            {
+                try { return Mutex.OpenExisting(name); }
+                catch { return null; }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static MutexSecurity BuildWorldWritableSecurity()
+        {
+            var sid = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            var rule = new MutexAccessRule(
+                sid,
+                MutexRights.FullControl,
+                AccessControlType.Allow);
+
+            var security = new MutexSecurity();
+            security.AddAccessRule(rule);
+            return security;
+        }
+
+        private static bool WaitForMutex(Mutex mutex, int timeoutMs)
+        {
+            try { return mutex.WaitOne(timeoutMs, false); }
+            catch (AbandonedMutexException) { return true; }
+            catch { return false; }
+        }
+
+        private static void SafeReleaseMutex(Mutex mutex)
+        {
+            try { mutex.ReleaseMutex(); }
+            catch { }
+        }
+
+        private static void DisposeMutex(ref Mutex? mutex)
+        {
+            try { mutex?.Close(); }
+            catch { }
+            finally { mutex = null; }
+        }
+
+        private void RememberDebug(Mailbox? mb, uint cmd, Status status)
+        {
+            LastMailboxName = mb?.Name;
+            LastCommand = cmd;
+            LastStatus = status;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(RyzenSMU));
         }
     }
 }

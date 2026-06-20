@@ -12,21 +12,25 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Universal_x86_Tuning_Utility.Models;
 using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
-using Universal_x86_Tuning_Utility.Scripts.AMD_Backend;
+//using Universal_x86_Tuning_Utility.Scripts.AMD_Backend;
 using Universal_x86_Tuning_Utility.Scripts.ASUS;
+using Universal_x86_Tuning_Utility.Scripts.Intel_Backend;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
 using Universal_x86_Tuning_Utility.Views.Pages;
+using Universal_x86_Tuning_Utility.Views.Windows;
 using Wpf.Ui.Mvvm.Contracts;
 using Wpf.Ui.Mvvm.Services;
 
@@ -47,7 +51,7 @@ namespace Universal_x86_Tuning_Utility
         public static ASUSWmi wmi;
         public static XgMobileConnectionService xgMobileConnectionService;
         private static ILogger<App>? _logger;
-        public static Mem_Timings memTimings = new Mem_Timings();
+        //public static Mem_Timings memTimings = new Mem_Timings();
 
         /// <summary>
         /// Gets registered service.
@@ -60,7 +64,7 @@ namespace Universal_x86_Tuning_Utility
             return _host.Services.GetService(typeof(T)) as T;
         }
 
-        public static string version = "2.5.6";
+        public static string version = "26.2.0";
         private Mutex mutex;
         private const string MutexName = "UniversalX86TuningUtility";
 
@@ -77,12 +81,15 @@ namespace Universal_x86_Tuning_Utility
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.ControlledBy(Scripts.Misc.DiagnosticLogger.LevelSwitch)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code, applyThemeToRedirectedOutput: true)
                 .WriteTo.File(LOGS_FOLDER + "uxtu_log.txt",
                     fileSizeLimitBytes: 8 * 1024 * 1024, // 8MB
                     rollingInterval: RollingInterval.Day
                 )
                 .CreateLogger();
+
+            Scripts.Misc.DiagnosticLogger.ApplySettingsLevel();
 
             if (!IsVcRedistInstalled("x64") && !IsVcRedistInstalled("x86"))
             {
@@ -224,16 +231,27 @@ namespace Universal_x86_Tuning_Utility
 
                 if (!createdNew)
                 {
-                    _logger.LogWarning("Failed to start app, as there is already running uxtu instance. Shutting down");
-                    MessageBox.Show("An instance of Universal x86 Tuning Utility is already open!",
-                        "Error starting Universal x86 Tuning Utility");
-                    // Close the new instance
+                    _logger.LogWarning("Another instance is already running. Signalling it to show.");
+
+                    try
+                    {
+                        using var showEvent = EventWaitHandle.OpenExisting($"{MutexName}.Show");
+                        showEvent.Set();
+                    }
+                    catch (WaitHandleCannotBeOpenedException)
+                    {
+                        _logger.LogWarning("Existing instance found, but show event not available.");
+                    }
+
                     Shutdown();
                     return;
-                }
+                } else StartSingleInstanceListener();
 
                 if (File.Exists("C:\\Universal.x86.Tuning.Utility.V2.msi"))
                     File.Delete("C:\\Universal.x86.Tuning.Utility.V2.msi");
+
+                if (File.Exists("C:\\Universal.x86.Tuning.Utility.msi"))
+                    File.Delete("C:\\Universal.x86.Tuning.Utility.msi");
 
                 Family.setCpuFamily();
 
@@ -274,6 +292,21 @@ namespace Universal_x86_Tuning_Utility
                     _logger.LogError(ex, "Failed to check for updates");
                 }
 
+                try
+                {
+                    if (IsInternetAvailable())
+                        if (PawnIoDetectionService.ShouldOpenInstaller())
+                        {
+                            InstallpawnIo installerWindow = new InstallpawnIo();
+
+                            installerWindow.Show();
+                        }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to check for PawnIO");
+                }
+
                 await _host.StartAsync();
 
                 try
@@ -291,6 +324,83 @@ namespace Universal_x86_Tuning_Utility
                 MessageBox.Show(ex.Message);
             }
         }
+
+        private EventWaitHandle? _showEvent;
+        private CancellationTokenSource? _showListenerCts;
+
+        private void StartSingleInstanceListener()
+        {
+            _showEvent = new EventWaitHandle(
+                initialState: false,
+                mode: EventResetMode.AutoReset,
+                name: $"{MutexName}.Show");
+
+            _showListenerCts = new CancellationTokenSource();
+
+            Task.Run(() =>
+            {
+                while (!_showListenerCts.IsCancellationRequested)
+                {
+                    _showEvent.WaitOne();
+                    // Must switch to UI thread
+                    Application.Current.Dispatcher.Invoke(BringMainWindowToFront);
+                }
+            });
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _showListenerCts?.Cancel();
+            _showEvent?.Dispose();
+            mutex?.Dispose();
+            base.OnExit(e);
+        }
+
+        private void BringMainWindowToFront()
+        {
+            var window = Application.Current.MainWindow;
+            if (window == null) return;
+
+            if (!window.IsVisible)
+                window.Show();
+
+            if (window.WindowState == WindowState.Minimized)
+                window.WindowState = WindowState.Normal;
+
+            window.UpdateLayout();
+
+            var screen = System.Windows.Forms.Screen.FromHandle(
+                new WindowInteropHelper(window).Handle);
+
+            var workingArea = screen.WorkingArea;
+
+            double minWidth = window.MinWidth > 0 ? window.MinWidth : 980;
+            double minHeight = window.MinHeight > 0 ? window.MinHeight : 420;
+
+            window.Width = Math.Max(window.Width, minWidth);
+            window.Height = Math.Max(window.Height, minHeight);
+
+            window.Width = Math.Min(window.Width, workingArea.Width);
+            window.Height = Math.Min(window.Height, workingArea.Height);
+
+            window.Left = workingArea.Left +
+                (workingArea.Width - window.Width) / 2;
+
+            window.Top = workingArea.Top +
+                (workingArea.Height - window.Height) / 2;
+
+            window.Activate();
+
+            window.Topmost = true;
+            window.Topmost = false;
+
+            var handle = new WindowInteropHelper(window).Handle;
+            if (handle != IntPtr.Zero)
+                SetForegroundWindow(handle);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         public static async void CheckForUpdate()
         {
@@ -315,7 +425,7 @@ namespace Universal_x86_Tuning_Utility
             {
                 using (var ping = new Ping())
                 {
-                    var result = ping.Send("8.8.8.8", 2000); // ping Google DNS server
+                    var result = ping.Send("8.8.8.8", 2000);
                     return result.Status == IPStatus.Success;
                 }
             }
@@ -341,6 +451,7 @@ namespace Universal_x86_Tuning_Utility
         private async void OnExit(object sender, ExitEventArgs e)
         {
             if (Family.TYPE != Family.ProcessorType.Intel) SMUCommands.RyzenAccess.Deinitialize();
+            else Intel_Management.Deinitialize();
 
             await _host.StopAsync();
 

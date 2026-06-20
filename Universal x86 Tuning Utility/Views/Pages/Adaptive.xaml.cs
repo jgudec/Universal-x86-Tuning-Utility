@@ -161,7 +161,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 if (Settings.Default.isStartAdpative) ToggleAdaptiveMode();
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during adaptive mode setup");
+            }
         }
 
         [DllImport("user32.dll")]
@@ -209,7 +212,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     Settings.Default.Save();
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to toggle adaptive mode");
+            }
         }
 
         public static int CPUTemp, CPULoad, CPUClock, CPUPower, GPULoad, GPUClock, GPUMemClock;
@@ -298,7 +304,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     cbxResScale.SelectedIndex = myPreset.ResScaleIndex;
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to load adaptive preset");
+            }
         }
 
         private void savePreset(string presetName)
@@ -338,7 +347,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 };
                 adaptivePresetManager.SavePreset(presetName, preset);
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to save adaptive preset");
+            }
         }
 
         private static LASTINPUTINFO lastInput = new LASTINPUTINFO();
@@ -356,7 +368,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                 foreach (GameLauncherItem item in Game_Manager.installedGames) cbxPowerPreset.Items.Add(item.gameName);
                 cbxPowerPreset.SelectedIndex = 0;
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to reload game apps");
+            }
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -426,7 +441,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during sensor tick");
+            }
         }
 
         public static int GetRadeonGPUCount()
@@ -560,7 +578,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     //}
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed during adaptive mode update");
+            }
         }
 
         public bool IsScrollBarVisible(ScrollViewer scrollViewer)
@@ -623,7 +644,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                         }
                         catch (Exception ex)
                         {
-
+                            DiagnosticLogger.LogError(ex, "Failed to check running game process");
                         }
                     }
                     i++;

@@ -25,7 +25,6 @@ namespace Universal_x86_Tuning_Utility.Scripts.GPUs.NVIDIA
 
         private static int GetROPCount(string gpuName)
         {
-            // Replace with TPU DB look up (if accurate for cards)
             if (gpuName.Contains("Laptop"))
             {
                 // Blackwell

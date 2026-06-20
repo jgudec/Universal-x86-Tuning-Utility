@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <UseWPF>true</UseWPF>
@@ -15,11 +15,11 @@
     <UseWindowsForms>True</UseWindowsForms>
     <SignAssembly>False</SignAssembly>
     <Copyright>© UXTU Team 2020 - 2026</Copyright>
-    <AssemblyVersion>2.5.6</AssemblyVersion>
-    <FileVersion>2.5.6</FileVersion>
+    <AssemblyVersion>26.2.0</AssemblyVersion>
+    <FileVersion>26.2.0</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
-    <Version>2.5.6</Version>
+    <Version>26.2.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,28 +32,34 @@
 
   <ItemGroup>
     <PackageReference Include="Accord.Math" Version="3.8.0" />
-    <PackageReference Include="craftersmine.SteamGridDB.Net" Version="1.1.5" />
+    <PackageReference Include="craftersmine.SteamGridDB.Net" Version="1.1.7" />
     <PackageReference Include="FuzzyStrings.NetStandard" Version="1.0.1" />
     <PackageReference Include="GameLib.NET" Version="1.4.1" />
     <PackageReference Include="hidlibrary" Version="3.3.40" />
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.3" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
     <PackageReference Include="MouseKeyHook" Version="5.7.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NvAPIWrapper.Net" Version="0.8.1.101" />
-    <PackageReference Include="Octokit" Version="9.1.2" />
+    <PackageReference Include="Octokit" Version="14.0.0" />
     <PackageReference Include="SecretNest.SequentialScheduler" Version="1.1.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="System.Management" Version="8.0.0" />
-    <PackageReference Include="TaskScheduler" Version="2.10.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.9" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.9" />
+    <PackageReference Include="System.Management" Version="10.0.9" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
     <PackageReference Include="WPF-UI" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="AMDFamily0F.bin" />
+    <None Remove="AMDFamily10.bin" />
+    <None Remove="AMDFamily17.bin" />
+    <None Remove="AMDReset.bin" />
     <None Remove="Assets\applicationIcon-1024.png" />
     <None Remove="Assets\applicationIcon-256.png" />
     <None Remove="Assets\BuiltInScaleModels.json" />
@@ -78,6 +84,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\AMD\PawnIO\AMDFamily0F.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\AMD\PawnIO\AMDFamily10.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\AMD\PawnIO\AMDFamily17.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\AMD\PawnIO\AMDReset.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="favicon.ico" />
     <Content Include="Fan Configs\AYANEO_GEEK.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -128,6 +146,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="AutoOC">
+      <HintPath>..\..\AutoOC\AutoOC\bin\Release\net10.0\publish\AutoOC.dll</HintPath>
+    </Reference>
     <Reference Include="RTSSSharedMemoryNET">
       <HintPath>Assets\RTSS\RTSSSharedMemoryNET.dll</HintPath>
     </Reference>
@@ -160,31 +181,10 @@
     <None Update="Assets\GameImages\default.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Intel\KX\KX.exe">
+    <None Update="Assets\Intel\PawnIO\IntelMCHBAR.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Intel\MSR\msr-cmd.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\winio-drv.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinIo32.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinIo32.sys">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinIo64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinIo64.sys">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinRing0x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Intel\MSR\WinRing0x64.sys">
+    <None Update="Assets\Intel\PawnIO\IntelMSR.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\RTSS\RTSSHooks64.dll">
@@ -430,9 +430,6 @@
     <None Update="effects\xBRZ_Freescale.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="inpoutx64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="kernel32.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -468,6 +465,9 @@
     <None Update="RTSSSharedMemoryNET.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\AMD\PawnIO\RyzenSMU.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="ucrtbased.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -477,25 +477,13 @@
     <None Update="vcruntime140_1d.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="WinRing0x64_Fan.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="WinRing0x64_Fan.sys">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="WinRing0x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="WinRing0x64.sys">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="WinRing0x64_Mem.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="WinRing0x64_Mem.sys">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="WinRing0_Mem.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="WinRing0_Mem.sys">

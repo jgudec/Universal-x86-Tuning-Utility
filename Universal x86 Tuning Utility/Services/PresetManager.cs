@@ -85,7 +85,7 @@ namespace Universal_x86_Tuning_Utility.Services
         public int nvMaxCoreClk { get; set; } = 4000;
         public int nvCoreClk { get; set; }
         public int nvMemClk { get; set; }
-
+        public int nvPower { get; set; }
         public int amdClock { get; set; }
         public int amdVID { get; set; }
 

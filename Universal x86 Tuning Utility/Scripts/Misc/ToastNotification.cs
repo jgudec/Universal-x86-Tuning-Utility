@@ -25,7 +25,11 @@ namespace Universal_x86_Tuning_Utility.Scripts.Misc
                    .AddText(body)
                    .AddAppLogoOverride(new Uri(iconUri))
                    .Show();
-            } catch (Exception ex) { }
+            }
+            catch (Exception ex)
+            {
+                DiagnosticLogger.LogError(ex, "Failed to show toast notification");
+            }
         }
     }
 }
