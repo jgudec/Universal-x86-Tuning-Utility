@@ -192,6 +192,10 @@ namespace Universal_x86_Tuning_Utility
                         services.AddScoped<ViewModels.DataViewModel>();
                         services.AddScoped<Views.Pages.SettingsPage>();
                         services.AddScoped<ViewModels.SettingsViewModel>();
+                        services.AddScoped<Views.Pages.Watercooler>();
+
+                        // Watercooler service (singleton for auto-connect)
+                        services.AddSingleton<WaterCoolerService>();
 
                         // Configuration
                         services.Configure<AppConfig>(context.Configuration.GetSection(nameof(AppConfig)));
@@ -308,6 +312,18 @@ namespace Universal_x86_Tuning_Utility
                 }
 
                 await _host.StartAsync();
+
+                // Auto-connect watercooler on startup if enabled
+                try
+                {
+                    var waterCoolerService = _host.Services.GetService<WaterCoolerService>();
+                    if (waterCoolerService != null && WaterCoolerHardwareDetector.IsSupportedHardware())
+                        await waterCoolerService.TryAutoConnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to auto-connect watercooler");
+                }
 
                 try
                 {
@@ -470,6 +486,14 @@ namespace Universal_x86_Tuning_Utility
         {
             // For more info see https://docs.microsoft.com/en-us/dotnet/api/system.windows.application.dispatcherunhandledexception?view=windowsdesktop-6.0
             _logger?.LogCritical(e.Exception, "Unhandled dispatcher exception");
+
+            MessageBox.Show(
+                $"An unexpected error occurred:\n\n{e.Exception.Message}\n\nDetails:\n{e.Exception}",
+                "Application Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            e.Handled = true;
         }
 
         static void UnblockFilesInDirectory(string directoryPath)

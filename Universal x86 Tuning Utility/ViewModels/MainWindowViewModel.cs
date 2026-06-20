@@ -112,6 +112,18 @@ namespace Universal_x86_Tuning_Utility.ViewModels
                 }
             };
 
+                // Conditionally insert Hydro UI before Info for supported watercooler hardware
+                if (WaterCoolerHardwareDetector.IsSupportedHardware())
+                {
+                    NavigationItems.Insert(NavigationItems.Count - 1, new NavigationItem()
+                    {
+                        Content = "Hydro UI",
+                        PageTag = "watercooler",
+                        Icon = SymbolRegular.Water20,
+                        PageType = typeof(Views.Pages.Watercooler)
+                    });
+                }
+
                 NavigationFooter = new ObservableCollection<INavigationControl>
             {
                 new NavigationItem()
@@ -200,6 +212,18 @@ namespace Universal_x86_Tuning_Utility.ViewModels
                     PageType = typeof(Views.Pages.SystemInfo)
                 }
             };
+
+                // Conditionally insert Hydro UI before Info for supported watercooler hardware
+                if (WaterCoolerHardwareDetector.IsSupportedHardware())
+                {
+                    NavigationItems.Insert(NavigationItems.Count - 1, new NavigationItem()
+                    {
+                        Content = "Hydro UI",
+                        PageTag = "watercooler",
+                        Icon = SymbolRegular.Drop20,
+                        PageType = typeof(Views.Pages.Watercooler)
+                    });
+                }
 
                 NavigationFooter = new ObservableCollection<INavigationControl>
             {
