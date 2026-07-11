@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where *)",
+      "Bash(dotnet *)",
+      "Bash(findstr *)",
+      "Bash(taskkill *)"
+    ]
+  },
+  "$version": 4
+}
