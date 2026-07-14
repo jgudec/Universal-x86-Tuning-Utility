@@ -546,6 +546,85 @@ Icon="Power20" Margin="0,8,15,0">
                         </ui:CardControl.Header>
                     </ui:CardControl>
 
+                    <!-- Hydro UI (Watercooler) - only visible on supported hardware -->
+                    <ui:CardExpander Name="sdHydroUI"
+                        Visibility="Collapsed"
+                        IsEnabled="True"
+                        IsExpanded="False"
+                        Icon="Play20" Margin="0,8,15,0">
+                        <ui:CardExpander.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Medium"
+                                        Text="Hydro UI (Watercooler)" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Text="Per-game pump voltage and fan speed for the LCT watercooler."/>
+                                </StackPanel>
+                            </Grid>
+                        </ui:CardExpander.Header>
+                        <StackPanel>
+                            <StackPanel Margin="0,-8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Pump Voltage</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the pump voltage for this game. Higher voltage = more cooling." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxWcPumpVoltage" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="1">
+                                    <ComboBoxItem>Off</ComboBoxItem>
+                                    <ComboBoxItem>7V</ComboBoxItem>
+                                    <ComboBoxItem>8V</ComboBoxItem>
+                                    <ComboBoxItem>11V</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Fan Speed</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the fan duty cycle for this game. Higher = more airflow, more noise." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxWcFanSpeed" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="2">
+                                    <ComboBoxItem>Off</ComboBoxItem>
+                                    <ComboBoxItem>25%</ComboBoxItem>
+                                    <ComboBoxItem>50%</ComboBoxItem>
+                                    <ComboBoxItem>75%</ComboBoxItem>
+                                    <ComboBoxItem>90%</ComboBoxItem>
+                                    <ComboBoxItem>95%</ComboBoxItem>
+                                    <ComboBoxItem>100%</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">RGB Mode</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the RGB lighting mode for this game." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxWcRgbMode" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="1">
+                                    <ComboBoxItem>Off</ComboBoxItem>
+                                    <ComboBoxItem>Static</ComboBoxItem>
+                                    <ComboBoxItem>Breathe</ComboBoxItem>
+                                    <ComboBoxItem>Colorful</ComboBoxItem>
+                                    <ComboBoxItem>Breathe Color</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">RGB Color</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the RGB color for this game." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxWcRgbColor" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="0">
+                                    <ComboBoxItem>Red</ComboBoxItem>
+                                    <ComboBoxItem>Green</ComboBoxItem>
+                                    <ComboBoxItem>Blue</ComboBoxItem>
+                                    <ComboBoxItem>White</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </ui:CardExpander>
+
                     <ui:CardExpander Name="sdRTSS" Visibility="Collapsed"
 IsEnabled="True"
 IsExpanded="False"

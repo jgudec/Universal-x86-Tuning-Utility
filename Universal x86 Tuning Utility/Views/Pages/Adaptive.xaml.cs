@@ -27,6 +27,7 @@ using System.Windows.Threading;
 using Universal_x86_Tuning_Utility.Properties;
 using Universal_x86_Tuning_Utility.Scripts;
 using Universal_x86_Tuning_Utility.Scripts.Adaptive;
+using Universal_x86_Tuning_Utility.Models;
 using Universal_x86_Tuning_Utility.Scripts.Misc;
 using Universal_x86_Tuning_Utility.Services;
 using static System.Net.Mime.MediaTypeNames;
@@ -69,8 +70,11 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
             cbAutoSwitch.IsChecked = Settings.Default.autoSwitch;
 
             if (!Settings.Default.isASUS) sdAsusPower.Visibility = Visibility.Collapsed;
+
+            sdHydroUI.Visibility = WaterCoolerHardwareDetector.IsSupportedHardware() ? Visibility.Visible : Visibility.Collapsed;
         }
         private static AdaptivePresetManager adaptivePresetManager = new AdaptivePresetManager(Settings.Default.Path + "adaptivePresets.json");
+        private static WaterCoolerService? _waterCoolerService;
         private async void setUp()
         {
             try
@@ -141,6 +145,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             isRecap = (bool)cbAutoCap.IsChecked,
                             Sharpness = (int)nudSharp.Value,
                             ResScaleIndex = (int)cbxResScale.SelectedIndex,
+                            WcPumpVoltage = "V7",
+                            WcFanSpeed = "Percent50",
+                            WcRgbMode = "Static",
+                            WcRgbColor = "Red",
                             isAutoSwitch = (bool)tsAutoSwitch.IsChecked
                         };
                         adaptivePresetManager.SavePreset(item.gameName, preset);
@@ -302,6 +310,16 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     cbAutoCap.IsChecked = myPreset.isRecap;
                     nudSharp.Value = myPreset.Sharpness;
                     cbxResScale.SelectedIndex = myPreset.ResScaleIndex;
+
+                    // Watercooler
+                    if (Enum.TryParse<PumpVoltage>(myPreset.WcPumpVoltage, true, out var pv))
+                        cbxWcPumpVoltage.SelectedIndex = GetPumpVoltageIndex(pv);
+                    if (Enum.TryParse<FanSpeed>(myPreset.WcFanSpeed, true, out var fs))
+                        cbxWcFanSpeed.SelectedIndex = GetFanSpeedIndex(fs);
+                    if (Enum.TryParse<RgbState>(myPreset.WcRgbMode, true, out var rm))
+                        cbxWcRgbMode.SelectedIndex = GetRgbModeIndex(rm);
+                    if (Enum.TryParse<RgbColor>(myPreset.WcRgbColor, true, out var rc))
+                        cbxWcRgbColor.SelectedIndex = GetRgbColorIndex(rc);
                 }
             }
             catch (Exception ex)
@@ -343,6 +361,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     isRecap = (bool)cbAutoCap.IsChecked,
                     Sharpness = (int)nudSharp.Value,
                     ResScaleIndex = (int)cbxResScale.SelectedIndex,
+                    WcPumpVoltage = GetPumpVoltageFromIndex(cbxWcPumpVoltage.SelectedIndex).ToString(),
+                    WcFanSpeed = GetFanSpeedFromIndex(cbxWcFanSpeed.SelectedIndex).ToString(),
+                    WcRgbMode = GetRgbModeFromIndex(cbxWcRgbMode.SelectedIndex).ToString(),
+                    WcRgbColor = GetRgbColorFromIndex(cbxWcRgbColor.SelectedIndex).ToString(),
                     isAutoSwitch = (bool)tsAutoSwitch.IsChecked
                 };
                 adaptivePresetManager.SavePreset(presetName, preset);
@@ -483,6 +505,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         string lastCPU = "";
         string lastCO = "";
         string lastiGPU = "";
+        PumpVoltage lastWcPump = PumpVoltage.Off;
+        FanSpeed lastWcFan = FanSpeed.Off;
+        RgbState lastWcRgbMode = RgbState.Off;
+        RgbColor lastWcRgbColor = RgbColor.Red;
         private async void update()
         {
             try
@@ -552,6 +578,37 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                         if (tsNV.IsChecked == true)
                         {
                             commandString = commandString + $"--NVIDIA-Clocks={nudNVMaxCore.Value}-{nudNVCore.Value}-{nudNVMem.Value} ";
+                        }
+
+                        // Apply watercooler settings if hardware is supported and connected
+                        if (_waterCoolerService == null && WaterCoolerHardwareDetector.IsSupportedHardware())
+                            _waterCoolerService = App.GetService<WaterCoolerService>();
+
+                        if (_waterCoolerService != null && _waterCoolerService.IsConnected)
+                        {
+                            PumpVoltage curPump = GetPumpVoltageFromIndex(cbxWcPumpVoltage.SelectedIndex);
+                            FanSpeed curFan = GetFanSpeedFromIndex(cbxWcFanSpeed.SelectedIndex);
+                            RgbState curRgbMode = GetRgbModeFromIndex(cbxWcRgbMode.SelectedIndex);
+                            RgbColor curRgbColor = GetRgbColorFromIndex(cbxWcRgbColor.SelectedIndex);
+
+                            if (curPump != lastWcPump)
+                            {
+                                await _waterCoolerService.WritePumpModeAsync(curPump);
+                                lastWcPump = curPump;
+                            }
+
+                            if (curFan != lastWcFan)
+                            {
+                                await _waterCoolerService.WriteFanModeAsync(curFan);
+                                lastWcFan = curFan;
+                            }
+
+                            if (curRgbMode != lastWcRgbMode || curRgbColor != lastWcRgbColor)
+                            {
+                                await _waterCoolerService.WriteRgbModeAsync(curRgbMode, curRgbColor);
+                                lastWcRgbMode = curRgbMode;
+                                lastWcRgbColor = curRgbColor;
+                            }
                         }
 
                         if (commandString != null && commandString != "") await Task.Run(() => RyzenAdj_To_UXTU.Translate(commandString));
@@ -690,5 +747,109 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
 
             if (checkBox == cbImageSharp) cbRSR.IsChecked = false;
         }
+
+        #region Watercooler Helpers
+
+        private static PumpVoltage GetPumpVoltageFromIndex(int index)
+        {
+            return (index + 1) switch
+            {
+                1 => PumpVoltage.Off,
+                2 => PumpVoltage.V7,
+                3 => PumpVoltage.V8,
+                _ => PumpVoltage.V11
+            };
+        }
+
+        private static int GetPumpVoltageIndex(PumpVoltage voltage)
+        {
+            return voltage switch
+            {
+                PumpVoltage.Off => 0,
+                PumpVoltage.V7 => 1,
+                PumpVoltage.V8 => 2,
+                PumpVoltage.V11 => 3,
+                _ => 0
+            };
+        }
+
+        private static FanSpeed GetFanSpeedFromIndex(int index)
+        {
+            return (index + 1) switch
+            {
+                1 => FanSpeed.Off,
+                2 => FanSpeed.Percent25,
+                3 => FanSpeed.Percent50,
+                4 => FanSpeed.Percent75,
+                5 => FanSpeed.Percent90,
+                6 => FanSpeed.Percent95,
+                _ => FanSpeed.Percent100
+            };
+        }
+
+        private static int GetFanSpeedIndex(FanSpeed speed)
+        {
+            return speed switch
+            {
+                FanSpeed.Off => 0,
+                FanSpeed.Percent25 => 1,
+                FanSpeed.Percent50 => 2,
+                FanSpeed.Percent75 => 3,
+                FanSpeed.Percent90 => 4,
+                FanSpeed.Percent95 => 5,
+                FanSpeed.Percent100 => 6,
+                _ => 0
+            };
+        }
+
+        private static RgbState GetRgbModeFromIndex(int index)
+        {
+            return (index + 1) switch
+            {
+                1 => RgbState.Off,
+                2 => RgbState.Static,
+                3 => RgbState.Breathe,
+                4 => RgbState.Colorful,
+                _ => RgbState.BreatheColor
+            };
+        }
+
+        private static int GetRgbModeIndex(RgbState mode)
+        {
+            return mode switch
+            {
+                RgbState.Off => 0,
+                RgbState.Static => 1,
+                RgbState.Breathe => 2,
+                RgbState.Colorful => 3,
+                RgbState.BreatheColor => 4,
+                _ => 0
+            };
+        }
+
+        private static RgbColor GetRgbColorFromIndex(int index)
+        {
+            return (index + 1) switch
+            {
+                1 => RgbColor.Red,
+                2 => RgbColor.Green,
+                3 => RgbColor.Blue,
+                _ => RgbColor.White
+            };
+        }
+
+        private static int GetRgbColorIndex(RgbColor color)
+        {
+            return color switch
+            {
+                RgbColor.Red => 0,
+                RgbColor.Green => 1,
+                RgbColor.Blue => 2,
+                RgbColor.White => 3,
+                _ => 0
+            };
+        }
+
+        #endregion
     }
 }

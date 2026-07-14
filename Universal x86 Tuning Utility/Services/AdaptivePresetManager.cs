@@ -45,6 +45,12 @@ namespace Universal_x86_Tuning_Utility.Services
         public int Sharpness { get; set; }
         public int ResScaleIndex { get; set; }
 
+        // Watercooler (Hydro UI) per-game settings
+        public string WcPumpVoltage { get; set; } = "V7";
+        public string WcFanSpeed { get; set; } = "Percent50";
+        public string WcRgbMode { get; set; } = "Static";
+        public string WcRgbColor { get; set; } = "Red";
+
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool isAutoSwitch { get; set; }

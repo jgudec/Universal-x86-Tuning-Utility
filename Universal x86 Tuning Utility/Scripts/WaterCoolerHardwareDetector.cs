@@ -35,6 +35,7 @@ namespace Universal_x86_Tuning_Utility.Scripts
                     if (combined.Contains("tongfang") ||
                         combined.Contains("xmg") ||
                         combined.Contains("oasis") ||
+                        combined.Contains("schenker") ||
                         combined.Contains("specialist") ||
                         combined.Contains("eluktronics") ||
                         combined.Contains("tuxedo") ||
