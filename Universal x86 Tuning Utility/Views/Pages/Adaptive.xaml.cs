@@ -178,12 +178,80 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         [DllImport("user32.dll")]
         static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern int GetWindowTextLength(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool EnumWindows(WndEnumProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        delegate bool WndEnumProc(IntPtr hWnd, IntPtr lParam);
+
         [StructLayout(LayoutKind.Sequential)]
         struct LASTINPUTINFO
         {
             public uint cbSize;
             public uint dwTime;
         }
+
+        private const string DefaultProfileName = "Default";
+
+        // Window classes that are NOT games (browsers, notifications, taskbar, etc.)
+        private static readonly HashSet<string> ExcludedWindowClasses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Browsers
+            "Chrome_WidgetWin_1",      // Chrome/Edge/Electron windows
+            "MozillaWindowClass",       // Firefox
+            "IEFrame",                   // Internet Explorer
+            // Editors
+            "Notepad",                   // Notepad
+            "Notepad++",                 // Notepad++
+            "OpusApp",                   // Notepad++ (older)
+            // Shell / Explorer
+            "Shell_TrayWnd",             // Taskbar
+            "Shell_SecondaryTrayWnd",    // Secondary taskbar
+            "Shell_HostWindow",          // System tray host
+            "Shell_Dialog",              // Shell dialogs
+            "Shell_RenderedToolsWindow", // Shell tools
+            "Shell_ScopeHost",           // Scope host
+            "Shell_SideStrip",           // Explorer sidebar
+            "Explorer_ImmersiveModeWindow", // File Explorer
+            "CabinetWClass",             // File Explorer (older)
+            "Progman",                   // Desktop
+            "WorkerW",                   // Desktop worker windows
+            // Notifications
+            "NotifyIconOverflowWindow",  // System tray overflow
+            "ToastContainerWindow",      // Notification toasts
+            "WindowsToastContainerWindow", // Windows 11 toasts
+            "AmoHost",                   // Action Center host
+            // UWP / Modern UI
+            "Windows.UI.Core.CoreWindow", // UWP popup windows
+            "XamlExplorerHostIslandWindow", // UWP windows
+            "ApplicationFrameWindow",    // UWP host window
+            // Search / Start
+            "SearchUI",                  // Windows Search
+            "Start",                     // Start menu
+            "ServiceHubStartMenuRoot",   // Start menu root
+            // Input
+            "MSCTF_UIElementCandidateWindowClassName", // Input method
+            "IME",                       // Input method editor
+            // Misc system
+            "TaskListThumbnailWnd",      // Task view thumbnails
+            "DVDDetectionDialog",        // DVD detection dialog
+            "DVDDetectionDialogParent",  // DVD detection dialog parent
+            "MessageWindow",             // Hidden message windows
+            "MS_CursorWindow",           // Cursor windows
+            "ForegroundStaging"          // Foreground staging
+        };
 
         private void SizeSlider_TouchDown(object sender, TouchEventArgs e)
         {
@@ -662,13 +730,18 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         }
 
 
-        string runningGameName = "Default";
+        string runningGameName = DefaultProfileName;
+        string lastConfirmedGame = DefaultProfileName;
+        int gameMissingCount = 0;
+        const int maxGameMisses = 2;
+
         private void isGameRunning()
         {
+            string detectedGame = DefaultProfileName;
+
+            // --- Pass 1: Process-based detection ---
             foreach (GameLauncherItem item in installedGames)
             {
-                //var gamePath = game.Split("~");
-
                 int i = 0;
                 do
                 {
@@ -679,8 +752,6 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                         try
                         {
                             string executablePath = process.MainModule.FileName;
-                            string executableDirectory = System.IO.Path.GetDirectoryName(executablePath);
-                            string executableName = System.IO.Path.GetFileName(executablePath);
 
                             if (executablePath.Contains(item.path))
                             {
@@ -695,8 +766,8 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                                     continue;
                                 }
 
-                                runningGameName = item.gameName;
-                                return;
+                                detectedGame = item.gameName;
+                                break;
                             }
                         }
                         catch (Exception ex)
@@ -704,17 +775,105 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                             DiagnosticLogger.LogError(ex, "Failed to check running game process");
                         }
                     }
+
+                    if (detectedGame != DefaultProfileName)
+                    {
+                        break;
+                    }
+
                     i++;
                 } while (i < 2);
+
+                if (detectedGame != DefaultProfileName)
+                {
+                    break;
+                }
             }
-            runningGameName = "Default";
+
+            // --- Pass 2: Window-title fallback for fullscreen/elevated games ---
+            // Some games run elevated or in a protected context after launch, so MainModule.FileName
+            // throws an exception.  Enumerate visible windows and match titles against game names.
+            if (detectedGame == DefaultProfileName)
+            {
+                var matchedGameNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var classNameSb = new StringBuilder(256);
+                var titleSb = new StringBuilder(256);
+
+                EnumWindows((hWnd, lParam) =>
+                {
+                    if (!IsWindowVisible(hWnd))
+                        return true; // continue enumeration
+
+                    // Get window class to filter out non-game windows
+                    classNameSb.Clear();
+                    GetClassName(hWnd, classNameSb, classNameSb.Capacity);
+                    if (ExcludedWindowClasses.Contains(classNameSb.ToString()))
+                        return true;
+
+                    int length = GetWindowTextLength(hWnd);
+                    if (length == 0)
+                        return true;
+
+                    // Resize buffer if the title is longer than our default capacity
+                    if (length + 1 > titleSb.Capacity)
+                        titleSb.Capacity = length + 1;
+
+                    titleSb.Clear();
+                    GetWindowText(hWnd, titleSb, titleSb.Capacity);
+                    string windowTitle = titleSb.ToString().Trim();
+
+                    foreach (GameLauncherItem item in installedGames)
+                    {
+                        if (windowTitle.Contains(item.gameName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            bool autoSwitch = true;
+                            AdaptivePreset preset = adaptivePresetManager.GetPreset(item.gameName);
+                            if (preset != null)
+                                autoSwitch = preset.isAutoSwitch;
+
+                            if (autoSwitch)
+                                matchedGameNames.Add(item.gameName);
+                        }
+                    }
+
+                    return true; // continue enumeration
+                }, IntPtr.Zero);
+
+                if (matchedGameNames.Count > 0)
+                {
+                    // Prefer the longest match (most specific game name).
+                    detectedGame = matchedGameNames.OrderByDescending(n => n.Length).First();
+                }
+            }
+
+            // Commit detection immediately; only delay the revert.
+            if (detectedGame != DefaultProfileName)
+            {
+                lastConfirmedGame = detectedGame;
+                runningGameName = detectedGame;
+                gameMissingCount = 0;
+            }
+            else
+            {
+                // No game detected this poll.
+                if (lastConfirmedGame != DefaultProfileName)
+                {
+                    // Game was previously detected but is now missing — count misses.
+                    gameMissingCount++;
+                    if (gameMissingCount >= maxGameMisses)
+                    {
+                        runningGameName = DefaultProfileName;
+                        lastConfirmedGame = DefaultProfileName;
+                        gameMissingCount = 0;
+                    }
+                }
+                // If already at Default, nothing to do.
+            }
         }
 
 
         private void getRunningGame(string presetName)
         {
-            int selectedIndex = 0; // index to select if the search fails
-
             foreach (var item in cbxPowerPreset.Items)
             {
                 if (item.ToString() == presetName)
@@ -723,6 +882,9 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                     return;
                 }
             }
+
+            // Fallback to Default if the preset wasn't found.
+            cbxPowerPreset.SelectedIndex = 0;
         }
 
         private void cb_Checked(object sender, RoutedEventArgs e)
