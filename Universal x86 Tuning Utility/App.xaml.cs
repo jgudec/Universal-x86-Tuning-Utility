@@ -197,6 +197,10 @@ namespace Universal_x86_Tuning_Utility
                         // Watercooler service (singleton for auto-connect)
                         services.AddSingleton<WaterCoolerService>();
 
+                        // Flydigi BS2 Pro cooling pad page and service
+                        services.AddScoped<Views.Pages.FlydigiCooler>();
+                        services.AddSingleton<FlydigiCoolerService>();
+
                         // Configuration
                         services.Configure<AppConfig>(context.Configuration.GetSection(nameof(AppConfig)));
                     }).Build();
@@ -323,6 +327,18 @@ namespace Universal_x86_Tuning_Utility
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "Failed to auto-connect watercooler");
+                }
+
+                // Auto-connect Flydigi BS2 Pro cooling pad on startup if enabled
+                try
+                {
+                    var flydigiCoolerService = _host.Services.GetService<FlydigiCoolerService>();
+                    if (flydigiCoolerService != null && flydigiCoolerService.IsDeviceAvailable())
+                        await flydigiCoolerService.TryAutoConnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to auto-connect Flydigi cooler");
                 }
 
                 try

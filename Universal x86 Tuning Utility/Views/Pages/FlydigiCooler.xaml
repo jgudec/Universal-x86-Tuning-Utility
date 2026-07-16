@@ -1,0 +1,410 @@
+<Page x:Class="Universal_x86_Tuning_Utility.Views.Pages.FlydigiCooler"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    mc:Ignorable="d"
+    d:DesignHeight="450" d:DesignWidth="800"
+    Loaded="FlydigiCooler_Loaded"
+    Unloaded="Page_Unloaded">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24">
+
+            <!-- Header -->
+            <TextBlock Text="Flydigi Cooler Control"
+                FontSize="20" FontWeight="SemiBold"
+                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                Margin="0,0,0,16"/>
+
+            <!-- Device Status Card -->
+            <ui:CardControl Margin="0,0,0,12">
+                <ui:CardControl.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Column 1: Device image + live metrics -->
+                        <StackPanel Grid.Column="0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <Image x:Name="imgDevice"
+                                   Width="320"
+                                   Height="140"
+                                   Stretch="Uniform"
+                                   Source="pack://application:,,,/Assets/Flydigi/bs2-pro.png"
+                                   Margin="0,0,0,12"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                    <TextBlock Text="Current Speed" FontWeight="SemiBold" HorizontalAlignment="Center" FontSize="12"/>
+                                    <TextBlock Name="tbCurrentRpm" Text="--" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Rectangle Grid.Column="1"
+                                           Height="30"
+                                           Width="1"
+                                           Fill="Gray"
+                                           Margin="16,4"/>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="Device Temp" FontWeight="SemiBold" HorizontalAlignment="Center" FontSize="12"/>
+                                    <TextBlock Name="tbTemperature" Text="--" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Column 2: Status + action -->
+                        <StackPanel Grid.Column="1"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+
+                            <!-- Connected state -->
+                            <StackPanel x:Name="spConnectedState" Visibility="Collapsed">
+                                <ui:SymbolIcon Symbol="CheckmarkCircle48"
+                                               Foreground="Green"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,8"/>
+                                <TextBlock Text="Connected"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,16"/>
+                                <Button Name="btnDisconnect"
+                                        Content="Disconnect"
+                                        Width="140"
+                                        Click="btnDisconnect_Click"/>
+                            </StackPanel>
+
+                            <!-- Disconnected state -->
+                            <StackPanel x:Name="spDisconnectedState">
+                                <ui:SymbolIcon Symbol="DismissCircle48"
+                                               Foreground="Red"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,8"/>
+                                <TextBlock Text="Disconnected"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,0,0,16"/>
+
+                                <!-- Device discovery row -->
+                                <Grid HorizontalAlignment="Center" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Name="cbxDevices" Grid.Column="0" Margin="0,0,8,0" MinWidth="200"/>
+                                    <Button Name="btnScan" Grid.Column="1" Content="Scan" Width="80" Click="btnScan_Click"/>
+                                </Grid>
+
+                                <Button Name="btnConnect"
+                                        Content="Connect"
+                                        Width="140"
+                                        Click="btnConnect_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </ui:CardControl.Header>
+            </ui:CardControl>
+
+            <!-- Controls (hidden until connected) -->
+            <StackPanel Name="spControls" Visibility="Collapsed">
+
+                <!-- Adaptive Mode Override Warning -->
+                <ui:CardControl x:Name="cardAdaptiveWarning" Margin="0,0,0,12" Visibility="Collapsed">
+                    <ui:CardControl.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Warning24" Margin="0,0,8,0" Foreground="Red"/>
+                            <TextBlock Text="Adaptive Mode Override" Foreground="Red"/>
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <TextBlock Text="Adaptive Mode is currently controlling the Flydigi cooler. Fan controls on this page are disabled while Adaptive Mode is active." TextWrapping="Wrap"/>
+                </ui:CardControl>
+
+                <!-- Fan Control Section -->
+                <ui:CardControl Margin="0,0,0,12">
+                    <ui:CardControl.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Play20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Fan Control"/>
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <StackPanel>
+                        <!-- Fan Mode Selector -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox Name="cbxFanMode" MinWidth="160" SelectionChanged="cbxFanMode_SelectionChanged">
+                                <ComboBoxItem Content="Manual"/>
+                                <ComboBoxItem Content="Gear Presets"/>
+                                <ComboBoxItem Content="Auto (Curve)"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Manual Mode -->
+                        <StackPanel Name="spManual">
+                            <TextBlock Text="RPM (1300 - 4000)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:NumberBox Name="nudRpm" Grid.Column="0" Minimum="1300" Maximum="4000"
+                                    Value="{Binding ElementName=sliderRpm, Path=Value}"
+                                    SmallChange="100" MaxDecimalPlaces="0"
+                                    Margin="0,0,12,0"
+                                    ValueChanged="nudRpm_ValueChanged"/>
+                                <Slider Name="sliderRpm" Grid.Column="1" Minimum="1300" Maximum="4000"
+                                    Value="{Binding ElementName=nudRpm, Path=Value}"
+                                    TickFrequency="100" IsSnapToTickEnabled="True"
+                                    VerticalAlignment="Center"
+                                    ValueChanged="sliderRpm_ValueChanged"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Gear Presets Mode -->
+                        <StackPanel Name="spGear" Visibility="Collapsed" Margin="0,4,0,0">
+                            <TextBlock Text="Gear Preset:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <WrapPanel Margin="0,0,0,8">
+                                <Button Name="btnGearQuiet" Content="Quiet" Margin="0,0,6,6" Width="90" Click="btnGearQuiet_Click"/>
+                                <Button Name="btnGearStandard" Content="Standard" Margin="0,0,6,6" Width="90" Click="btnGearStandard_Click"/>
+                                <Button Name="btnGearStrong" Content="Strong" Margin="0,0,6,6" Width="90" Click="btnGearStrong_Click"/>
+                                <Button Name="btnGearOverclock" Content="Overclock" Margin="0,0,6,6" Width="90" Click="btnGearOverclock_Click"/>
+                            </WrapPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Sub-level:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox Name="cbxGearSubLevel" MinWidth="120">
+                                    <ComboBoxItem Content="Low"/>
+                                    <ComboBoxItem Content="Medium"/>
+                                    <ComboBoxItem Content="High"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Auto (Curve) Mode -->
+                        <StackPanel Name="spAuto" Visibility="Collapsed" Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="Curve Profile:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox Name="cbxCurveProfile" MinWidth="160" SelectionChanged="cbxCurveProfile_SelectionChanged"/>
+                            </StackPanel>
+                            <Button Name="btnEditCurve" Content="Edit Curve" Width="120" Click="btnEditCurve_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardControl>
+
+                <!-- RGB Control Section -->
+                <ui:CardControl Margin="0,0,0,12">
+                    <ui:CardControl.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Color24" Margin="0,0,8,0"/>
+                            <TextBlock Text="RGB Control"/>
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <StackPanel>
+                        <!-- RGB Mode -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox Name="cbxRgbMode" MinWidth="160" SelectionChanged="cbxRgbMode_SelectionChanged">
+                                <ComboBoxItem Content="Off"/>
+                                <ComboBoxItem Content="Smart-Temp"/>
+                                <ComboBoxItem Content="Static"/>
+                                <ComboBoxItem Content="Rotation"/>
+                                <ComboBoxItem Content="Flowing"/>
+                                <ComboBoxItem Content="Breathing"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- RGB Sliders (visible for Static/Breathing only) -->
+                        <StackPanel Name="spRgbSliders" Visibility="Collapsed">
+                            <!-- Red -->
+                            <StackPanel Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="R:" Width="20" VerticalAlignment="Center"/>
+                                    <ui:NumberBox Name="nudRgbR" Width="60" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=sliderRgbR, Path=Value}"
+                                        SmallChange="1" MaxDecimalPlaces="0"
+                                        Margin="4,0,8,0"/>
+                                    <Slider Name="sliderRgbR" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=nudRgbR, Path=Value}"
+                                        TickFrequency="1" IsSnapToTickEnabled="True"
+                                        VerticalAlignment="Center"
+                                        ValueChanged="RgbSlider_ValueChanged"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Green -->
+                            <StackPanel Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="G:" Width="20" VerticalAlignment="Center"/>
+                                    <ui:NumberBox Name="nudRgbG" Width="60" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=sliderRgbG, Path=Value}"
+                                        SmallChange="1" MaxDecimalPlaces="0"
+                                        Margin="4,0,8,0"/>
+                                    <Slider Name="sliderRgbG" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=nudRgbG, Path=Value}"
+                                        TickFrequency="1" IsSnapToTickEnabled="True"
+                                        VerticalAlignment="Center"
+                                        ValueChanged="RgbSlider_ValueChanged"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Blue -->
+                            <StackPanel Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="B:" Width="20" VerticalAlignment="Center"/>
+                                    <ui:NumberBox Name="nudRgbB" Width="60" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=sliderRgbB, Path=Value}"
+                                        SmallChange="1" MaxDecimalPlaces="0"
+                                        Margin="4,0,8,0"/>
+                                    <Slider Name="sliderRgbB" Minimum="0" Maximum="255"
+                                        Value="{Binding ElementName=nudRgbB, Path=Value}"
+                                        TickFrequency="1" IsSnapToTickEnabled="True"
+                                        VerticalAlignment="Center"
+                                        ValueChanged="RgbSlider_ValueChanged"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Multi-color picker for Rotation mode (created in code-behind) -->
+                        <StackPanel Name="mcRotationColorsHost" Visibility="Collapsed"/>
+
+                        <!-- Speed and Brightness (visible for Flowing only; Rotation uses its own controls) -->
+                        <StackPanel Name="spRgbSpeedBrightness" Visibility="Collapsed">
+                            <!-- Speed -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="Speed:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox Name="cbxRgbSpeed" MinWidth="120" SelectionChanged="cbxRgbSpeed_SelectionChanged">
+                                    <ComboBoxItem Content="Fast"/>
+                                    <ComboBoxItem Content="Medium"/>
+                                    <ComboBoxItem Content="Slow"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- Brightness -->
+                            <StackPanel Margin="0,0,0,4">
+                                <TextBlock Text="Brightness (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ui:NumberBox Name="nudRgbBrightness" Grid.Column="0" Minimum="0" Maximum="100"
+                                        Value="{Binding ElementName=sliderRgbBrightness, Path=Value}"
+                                        SmallChange="1" MaxDecimalPlaces="0"
+                                        Margin="0,0,12,0"/>
+                                    <Slider Name="sliderRgbBrightness" Grid.Column="1" Minimum="0" Maximum="100"
+                                        Value="{Binding ElementName=nudRgbBrightness, Path=Value}"
+                                        TickFrequency="1" IsSnapToTickEnabled="True"
+                                        VerticalAlignment="Center"
+                                        ValueChanged="RgbSlider_ValueChanged"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardControl>
+
+                <!-- Device Settings Section -->
+                <ui:CardControl Margin="0,0,0,12">
+                    <ui:CardControl.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Settings20" Margin="0,0,8,0"/>
+                            <TextBlock Text="Device Settings"/>
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <StackPanel>
+                        <!-- Auto-Connect -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:ToggleSwitch Name="tsAutoConnect" Margin="0,0,9,0"
+                                Checked="tsAutoConnect_Checked" Unchecked="tsAutoConnect_Unchecked"/>
+                            <TextBlock Text="Auto-connect on startup" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Power-On Start -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:ToggleSwitch Name="tsPowerOnStart" Margin="0,0,9,0"
+                                Checked="tsPowerOnStart_Checked" Unchecked="tsPowerOnStart_Unchecked"/>
+                            <TextBlock Text="Power-On Start" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Smart Start/Stop -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Smart Start/Stop:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox Name="cbxSmartStartStop" MinWidth="160" SelectionChanged="cbxSmartStartStop_SelectionChanged">
+                                <ComboBoxItem Content="Off"/>
+                                <ComboBoxItem Content="Immediate"/>
+                                <ComboBoxItem Content="Delayed"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Gear Indicator Light -->
+                        <StackPanel Orientation="Horizontal">
+                            <ui:ToggleSwitch Name="tsGearLight" Margin="0,0,9,0"
+                                Checked="tsGearLight_Checked" Unchecked="tsGearLight_Unchecked"/>
+                            <TextBlock Text="Gear Indicator Light" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardControl>
+
+                <!-- Advanced Section -->
+                <ui:CardControl Margin="0,0,0,12">
+                    <ui:CardControl.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Settings24" Margin="0,0,8,0"/>
+                            <TextBlock Text="Advanced"/>
+                        </StackPanel>
+                    </ui:CardControl.Header>
+                    <StackPanel>
+                        <!-- Speed Avoidance Zone -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:ToggleSwitch Name="tsAvoidance" Margin="0,0,9,0"
+                                Checked="tsAvoidance_Checked" Unchecked="tsAvoidance_Unchecked"/>
+                            <TextBlock Text="Speed Avoidance Zone" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Range:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ui:NumberBox Name="nudAvoidanceStart" Width="80" Minimum="1300" Maximum="4000"
+                                SmallChange="100" MaxDecimalPlaces="0"
+                                Margin="0,0,4,0"
+                                ValueChanged="nudAvoidance_ValueChanged"/>
+                            <TextBlock Text="-" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <ui:NumberBox Name="nudAvoidanceEnd" Width="80" Minimum="1300" Maximum="4000"
+                                SmallChange="100" MaxDecimalPlaces="0"
+                                ValueChanged="nudAvoidance_ValueChanged"/>
+                        </StackPanel>
+
+                        <!-- Temperature Source -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Temperature Source:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox Name="cbxTempSource" MinWidth="120" SelectionChanged="cbxTempSource_SelectionChanged">
+                                <ComboBoxItem Content="Max"/>
+                                <ComboBoxItem Content="CPU"/>
+                                <ComboBoxItem Content="GPU"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Learning -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:ToggleSwitch Name="tsLearning" Margin="0,0,9,0"
+                                Checked="tsLearning_Checked" Unchecked="tsLearning_Unchecked"/>
+                            <TextBlock Text="Learning" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Learning Bias -->
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Learning Bias:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox Name="cbxLearningBias" MinWidth="120" SelectionChanged="cbxLearningBias_SelectionChanged">
+                                <ComboBoxItem Content="Balanced"/>
+                                <ComboBoxItem Content="Cooling"/>
+                                <ComboBoxItem Content="Quiet"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardControl>
+
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

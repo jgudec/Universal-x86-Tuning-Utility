@@ -682,6 +682,15 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
 
             PremadePresets.SetPremadePresets();
 
+            // Eagerly instantiate the Adaptive page so its constructor runs (starts the
+            // sensor polling timer and auto-starts Adaptive Mode if isStartAdpative is set).
+            // Without this, the page is lazily created on first navigation, meaning the
+            // timer never starts and Adaptive Mode doesn't activate on app launch.
+            if (Settings.Default.isStartAdpative)
+            {
+                var adaptivePage = App.GetService<Views.Pages.Adaptive>();
+            }
+
             Task.Run(Garbage.Garbage_Collect);
         }
     }
