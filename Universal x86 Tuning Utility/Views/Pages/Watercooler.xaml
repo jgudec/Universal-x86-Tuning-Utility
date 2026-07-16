@@ -67,93 +67,98 @@
             </StackPanel>
         </ui:CardControl>
 
-        <!-- Pump Control -->
-        <ui:CardControl Margin="0,0,0,12">
-            <ui:CardControl.Header>
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Play24" Margin="0,0,8,0"/>
-                    <TextBlock Text="Pump Voltage"/>
-                </StackPanel>
-            </ui:CardControl.Header>
-            <StackPanel>
-                <ComboBox x:Name="cbxPumpVoltage" MinWidth="160" SelectionChanged="cbxPumpVoltage_SelectionChanged">
-                    <ComboBoxItem Content="Off"/>
-                    <ComboBoxItem Content="7V"/>
-                    <ComboBoxItem Content="8V"/>
-                    <ComboBoxItem Content="11V"/>
-                </ComboBox>
-                <TextBlock Text="Select pump voltage level. Higher voltage = more cooling."
-                    FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,4,0,0"/>
-            </StackPanel>
-        </ui:CardControl>
+        <!-- Controls (hidden until connected) -->
+        <StackPanel x:Name="spControls" Visibility="Collapsed">
 
-        <!-- Fan Control -->
-        <ui:CardControl Margin="0,0,0,12">
-            <ui:CardControl.Header>
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="RotateLeft24" Margin="0,0,8,0"/>
-                    <TextBlock Text="Fan Speed"/>
-                </StackPanel>
-            </ui:CardControl.Header>
-            <StackPanel>
-                <ComboBox x:Name="cbxFanSpeed" MinWidth="160" SelectionChanged="cbxFanSpeed_SelectionChanged">
-                    <ComboBoxItem Content="Off"/>
-                    <ComboBoxItem Content="25%"/>
-                    <ComboBoxItem Content="50%"/>
-                    <ComboBoxItem Content="75%"/>
-                    <ComboBoxItem Content="90%"/>
-                    <ComboBoxItem Content="95%"/>
-                    <ComboBoxItem Content="100%"/>
-                </ComboBox>
-                <TextBlock Text="Select fan duty cycle. Higher = more airflow, more noise."
-                    FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,4,0,0"/>
-            </StackPanel>
-        </ui:CardControl>
-
-        <!-- RGB Control -->
-        <ui:CardControl Margin="0,0,0,12">
-            <ui:CardControl.Header>
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Color24" Margin="0,0,8,0"/>
-                    <TextBlock Text="RGB Lighting"/>
-                </StackPanel>
-            </ui:CardControl.Header>
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox x:Name="cbxRgbMode" MinWidth="160" SelectionChanged="cbxRgbMode_SelectionChanged">
+            <!-- Pump Control -->
+            <ui:CardControl Margin="0,0,0,12">
+                <ui:CardControl.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Play24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Pump Voltage"/>
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel>
+                    <ComboBox x:Name="cbxPumpVoltage" MinWidth="160" SelectionChanged="cbxPumpVoltage_SelectionChanged">
                         <ComboBoxItem Content="Off"/>
-                        <ComboBoxItem Content="Static"/>
-                        <ComboBoxItem Content="Breathe"/>
-                        <ComboBoxItem Content="Colorful"/>
-                        <ComboBoxItem Content="Breathe Color"/>
+                        <ComboBoxItem Content="7V"/>
+                        <ComboBoxItem Content="8V"/>
+                        <ComboBoxItem Content="11V"/>
                     </ComboBox>
+                    <TextBlock Text="Select pump voltage level. Higher voltage = more cooling."
+                        FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Color:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <ComboBox x:Name="cbxRgbColor" MinWidth="160" SelectionChanged="cbxRgbColor_SelectionChanged">
-                        <ComboBoxItem Content="Red"/>
-                        <ComboBoxItem Content="Green"/>
-                        <ComboBoxItem Content="Blue"/>
-                        <ComboBoxItem Content="White"/>
-                    </ComboBox>
-                </StackPanel>
-            </StackPanel>
-        </ui:CardControl>
+            </ui:CardControl>
 
-        <!-- Settings -->
-        <ui:CardControl Margin="0,0,0,12">
-            <ui:CardControl.Header>
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Settings24" Margin="0,0,8,0"/>
-                    <TextBlock Text="Settings"/>
+            <!-- Fan Control -->
+            <ui:CardControl Margin="0,0,0,12">
+                <ui:CardControl.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="RotateLeft24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Fan Speed"/>
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel>
+                    <ComboBox x:Name="cbxFanSpeed" MinWidth="160" SelectionChanged="cbxFanSpeed_SelectionChanged">
+                        <ComboBoxItem Content="Off"/>
+                        <ComboBoxItem Content="25%"/>
+                        <ComboBoxItem Content="50%"/>
+                        <ComboBoxItem Content="75%"/>
+                        <ComboBoxItem Content="90%"/>
+                        <ComboBoxItem Content="95%"/>
+                        <ComboBoxItem Content="100%"/>
+                    </ComboBox>
+                    <TextBlock Text="Select fan duty cycle. Higher = more airflow, more noise."
+                        FontSize="12" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
-            </ui:CardControl.Header>
-            <StackPanel Orientation="Horizontal">
-                <ui:ToggleSwitch x:Name="tsAutoConnect" Margin="0,0,9,0" Checked="tsAutoConnect_Checked" Unchecked="tsAutoConnect_Unchecked"/>
-                <TextBlock Text="Auto-connect on startup" VerticalAlignment="Center"/>
-            </StackPanel>
-        </ui:CardControl>
+            </ui:CardControl>
+
+            <!-- RGB Control -->
+            <ui:CardControl Margin="0,0,0,12">
+                <ui:CardControl.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Color24" Margin="0,0,8,0"/>
+                        <TextBlock Text="RGB Lighting"/>
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox x:Name="cbxRgbMode" MinWidth="160" SelectionChanged="cbxRgbMode_SelectionChanged">
+                            <ComboBoxItem Content="Off"/>
+                            <ComboBoxItem Content="Static"/>
+                            <ComboBoxItem Content="Breathe"/>
+                            <ComboBoxItem Content="Colorful"/>
+                            <ComboBoxItem Content="Breathe Color"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Color:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox x:Name="cbxRgbColor" MinWidth="160" SelectionChanged="cbxRgbColor_SelectionChanged">
+                            <ComboBoxItem Content="Red"/>
+                            <ComboBoxItem Content="Green"/>
+                            <ComboBoxItem Content="Blue"/>
+                            <ComboBoxItem Content="White"/>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </ui:CardControl>
+
+            <!-- Settings -->
+            <ui:CardControl Margin="0,0,0,12">
+                <ui:CardControl.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Settings24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Settings"/>
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <StackPanel Orientation="Horizontal">
+                    <ui:ToggleSwitch x:Name="tsAutoConnect" Margin="0,0,9,0" Checked="tsAutoConnect_Checked" Unchecked="tsAutoConnect_Unchecked"/>
+                    <TextBlock Text="Auto-connect on startup" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ui:CardControl>
+
+        </StackPanel>
 
     </StackPanel>
     </ScrollViewer>

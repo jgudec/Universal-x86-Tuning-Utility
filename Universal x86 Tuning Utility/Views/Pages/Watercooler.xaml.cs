@@ -356,6 +356,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                         btnDisconnect.IsEnabled = true;
                         SetControlsEnabled(true);
                         cardDiscovery.Visibility = Visibility.Collapsed;
+                        spControls.Visibility = Visibility.Visible;
                         break;
 
                     case WaterCoolerService.WatercoolerConnectionState.Disconnected:
@@ -366,6 +367,7 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
                         btnDisconnect.IsEnabled = false;
                         SetControlsEnabled(false);
                         cardDiscovery.Visibility = Visibility.Visible;
+                        spControls.Visibility = Visibility.Collapsed;
                         break;
 
                     case WaterCoolerService.WatercoolerConnectionState.Scanning:

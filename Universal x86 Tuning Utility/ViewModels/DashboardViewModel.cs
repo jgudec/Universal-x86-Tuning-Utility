@@ -53,7 +53,8 @@ namespace Universal_x86_Tuning_Utility.ViewModels
 
         public void AutoAdaptive_Tick(object sender, EventArgs e)
         {
-           if(Settings.Default.isStartAdpative) _navigationService.Navigate(typeof(Views.Pages.Adaptive));
+            // Do NOT auto-navigate to Adaptive page on launch.
+            // The adaptive tick loop runs independently; users navigate manually.
             autoAdaptive.Stop();
         }
 
