@@ -722,6 +722,18 @@ namespace Universal_x86_Tuning_Utility.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AdaptiveBs2ProEnabled {
+            get {
+                return ((bool)(this["AdaptiveBs2ProEnabled"]));
+            }
+            set {
+                this["AdaptiveBs2ProEnabled"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool isTrack {
             get {
                 return ((bool)(this["isTrack"]));

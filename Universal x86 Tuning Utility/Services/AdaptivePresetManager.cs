@@ -46,10 +46,18 @@ namespace Universal_x86_Tuning_Utility.Services
         public int ResScaleIndex { get; set; }
 
         // Watercooler (Hydro UI) per-game settings
+        public bool WcEnabled { get; set; } = false;
         public string WcPumpVoltage { get; set; } = "V7";
         public string WcFanSpeed { get; set; } = "Percent50";
         public string WcRgbMode { get; set; } = "Static";
         public string WcRgbColor { get; set; } = "Red";
+
+        // BS2 Pro per-game settings
+        public bool Bs2ProEnabled { get; set; } = false;
+        public string Bs2ProFanMode { get; set; } = "Off"; // "Off", "Gear", "Rpm", "Curve"
+        public int Bs2ProGear { get; set; } = 1;           // 1-4 (Quiet/Standard/Strong/Overclock)
+        public ushort Bs2ProRpm { get; set; } = 2000;      // 1300-4000 manual RPM
+        public string Bs2ProCurveProfileId { get; set; } = string.Empty; // GUID of active curve profile
 
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

@@ -556,6 +556,7 @@ Icon="Power20" Margin="0,8,15,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock
@@ -567,6 +568,9 @@ Icon="Power20" Margin="0,8,15,0">
                                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                         Text="Per-game pump voltage and fan speed for the LCT watercooler."/>
                                 </StackPanel>
+                                <ui:ToggleSwitch Name="cbxWcEnabled" Grid.Column="1" VerticalAlignment="Center"
+                                    Margin="0,0,9,0"
+                                    ToolTip="Enable Hydro UI controls for this game" />
                             </Grid>
                         </ui:CardExpander.Header>
                         <StackPanel>
@@ -621,6 +625,88 @@ Icon="Power20" Margin="0,8,15,0">
                                     <ComboBoxItem>Blue</ComboBoxItem>
                                     <ComboBoxItem>White</ComboBoxItem>
                                 </ComboBox>
+                            </StackPanel>
+                        </StackPanel>
+                    </ui:CardExpander>
+
+                    <!-- BS2 Pro (Cooling Pad) - only visible on supported hardware -->
+                    <ui:CardExpander Name="sdBs2Pro"
+                        Visibility="Collapsed"
+                        IsEnabled="True"
+                        IsExpanded="False"
+                        Icon="WeatherSnow20" Margin="0,8,15,0">
+                        <ui:CardExpander.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Name="tbBs2ProTitle"
+                                        FontSize="14"
+                                        FontWeight="Medium"
+                                        Text="Flydigi Cooler" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Text="Per-game fan control for the Flydigi cooling pad."/>
+                                </StackPanel>
+                                <ui:ToggleSwitch Name="cbxBs2ProEnabled" Grid.Column="1" VerticalAlignment="Center"
+                                    Margin="0,0,9,0"
+                                    ToolTip="Enable cooling pad controls for this game" />
+                            </Grid>
+                        </ui:CardExpander.Header>
+                        <StackPanel>
+                            <StackPanel Margin="0,-8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Fan Mode</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the fan control mode for this game." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxBs2ProFanMode" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="0" SelectionChanged="cbxBs2ProFanMode_SelectionChanged">
+                                    <ComboBoxItem>Off</ComboBoxItem>
+                                    <ComboBoxItem>Gear Preset</ComboBoxItem>
+                                    <ComboBoxItem>Manual RPM</ComboBoxItem>
+                                    <ComboBoxItem>Curve (Auto)</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Name="spBs2ProGear" Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Gear Preset</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select the gear preset (1=Quiet, 4=Overclock)." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxBs2ProGear" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="0">
+                                    <ComboBoxItem>1 - Quiet</ComboBoxItem>
+                                    <ComboBoxItem>2 - Standard</ComboBoxItem>
+                                    <ComboBoxItem>3 - Strong</ComboBoxItem>
+                                    <ComboBoxItem>4 - Overclock</ComboBoxItem>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Name="spBs2ProRpm" Margin="0,8,0,0" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Manual RPM</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Set a fixed RPM for this game (1300-4000)." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:NumberBox Name="nudBs2ProRpm" Value="2000" Minimum="1300" Maximum="4000" Grid.Column="0" SmallChange="50" MaxDecimalPlaces="0" />
+                                    <Slider Name="sdBs2ProRpm" Value="{Binding ElementName=nudBs2ProRpm, Path=Value}" Minimum="1300" Maximum="4000" Grid.Column="1" Margin="12,0,0,0" TickFrequency="50" VerticalAlignment="Center" IsSnapToTickEnabled="True" TouchDown="SizeSlider_TouchDown"/>
+                                </Grid>
+                            </StackPanel>
+                            <StackPanel Name="spBs2ProCurve" Margin="0,8,0,0" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="DemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">Curve Profile</TextBlock>
+                                    <ui:SymbolIcon Symbol="Info20" Margin="6,0,0,-2" Foreground="{DynamicResource TextFillColorPrimaryBrush}" ToolTip="Select a fan curve profile for automatic temperature-driven control." VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <ComboBox Name="cbxBs2ProCurve" MinWidth="160" Margin="0,4,0,0" Height="37" SelectedIndex="0">
+                                    <ComboBoxItem>Silent</ComboBoxItem>
+                                    <ComboBoxItem>Balanced</ComboBoxItem>
+                                    <ComboBoxItem>Performance</ComboBoxItem>
+                                    <ComboBoxItem>Custom</ComboBoxItem>
+                                </ComboBox>
+                                <Button Name="btnBs2ProEditCurve" Content="Edit Curve" Width="120" Margin="0,8,0,0" Click="btnBs2ProEditCurve_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:CardExpander>
