@@ -144,9 +144,10 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
         {
             var selectedIndex = cbxFanMode.SelectedIndex;
             var enteringAuto = selectedIndex == 2;
+            var enteringManual = selectedIndex == 0;
             var wasAuto = _smartControl != null;
 
-            spManual.Visibility = selectedIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
+            spManual.Visibility = enteringManual ? Visibility.Visible : Visibility.Collapsed;
             spGear.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
             spAuto.Visibility = enteringAuto ? Visibility.Visible : Visibility.Collapsed;
 
@@ -157,6 +158,13 @@ namespace Universal_x86_Tuning_Utility.Views.Pages
             else if (!enteringAuto && wasAuto)
             {
                 StopAutoControl();
+            }
+
+            // When entering Manual mode, immediately apply the saved RPM so the device
+            // doesn't stay at whatever Auto was commanding.
+            if (enteringManual)
+            {
+                ApplyRpmAsync();
             }
         }
 
