@@ -99,7 +99,15 @@ namespace Universal_x86_Tuning_Utility.Views.Windows
 
         private void SetupUI()
         {
-            tbMain.Title = $"Universal x86 Tuning Utility - {Family.CPUName}";
+            ModelNameText.Text = !string.IsNullOrEmpty(Family.LaptopModel) ? Family.LaptopModel : "UXTU";
+            CpuChipText.Text = Family.CPUName;
+
+            if (!string.IsNullOrEmpty(Family.GPUName))
+            {
+                GpuChipText.Text = Family.GPUName;
+                GpuChip.Visibility = Visibility.Visible;
+            }
+
             Controller.SetUpMagWindow(this);
             Wpf.Ui.Appearance.Watcher.Watch(this, Wpf.Ui.Appearance.BackgroundType.Mica, true);
         }

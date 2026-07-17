@@ -63,7 +63,120 @@ namespace Universal_x86_Tuning_Utility.Scripts
 
 
         public static string CPUName = "";
+        public static string GPUName = "";
+        public static string LaptopModel = "";
         public static int CPUFamily = 0, CPUModel = 0, CPUStepping = 0;
+
+        /// <summary>
+        /// Returns a recommended PL1 power limit (in watts) based on the detected CPU
+        /// and whether a watercooler (LCT or Flydigi BS2 Pro) is actively connected.
+        /// </summary>
+        public static int GetRecommendedPowerLimit(bool watercoolerConnected)
+        {
+            string name = CPUName.ToUpperInvariant();
+
+            // --- Intel ---
+            if (TYPE == ProcessorType.Intel)
+            {
+                // Core Ultra 9 275HX (2025 XMG Neo) - 140W air / 160W liquid
+                if (name.Contains("275HX"))
+                    return watercoolerConnected ? 160 : 140;
+
+                // Core i9-14900HX (2024 XMG Neo) - 125W air / 160W liquid
+                if (name.Contains("14900HX"))
+                    return watercoolerConnected ? 160 : 125;
+
+                // Core i9-13900HX / 13905HX - 125W air / 150W liquid
+                if (name.Contains("13900HX") || name.Contains("13905HX"))
+                    return watercoolerConnected ? 150 : 125;
+
+                // Core i7-14700HX - 115W air / 140W liquid
+                if (name.Contains("14700HX"))
+                    return watercoolerConnected ? 140 : 115;
+
+                // Core i7-13700H / 13700P
+                if (name.Contains("13700H") || name.Contains("13700P"))
+                    return 45;
+
+                // Core Ultra 9 185H / 185U
+                if (name.Contains("185H") || name.Contains("185U"))
+                    return 55;
+
+                // Core Ultra 7 155H / 155U
+                if (name.Contains("155H") || name.Contains("155U"))
+                    return 55;
+
+                // Core Ultra 5 125H / 125U
+                if (name.Contains("125H") || name.Contains("125U"))
+                    return 55;
+
+                // Generic HX series (high-performance mobile)
+                if (name.Contains("HX"))
+                    return watercoolerConnected ? 130 : 100;
+
+                // Generic H series (performance mobile)
+                if (name.Contains("H ") || name.EndsWith("H"))
+                    return 45;
+
+                // Generic U series (ultralow)
+                if (name.Contains("U ") || name.EndsWith("U"))
+                    return 15;
+
+                // Unknown Intel fallback
+                return watercoolerConnected ? 80 : 65;
+            }
+
+            // --- AMD ---
+            if (TYPE == ProcessorType.Amd_Desktop_Cpu)
+                return 86;
+
+            // AMD Ryzen 9 9955HX / 9955HX3D (2025 XMG Neo) - 80W air / 110W liquid
+            if (name.Contains("9955HX"))
+                return watercoolerConnected ? 110 : 80;
+
+            // AMD Ryzen 9 7945HX / 7945HX3D (DragonRange)
+            if (name.Contains("7945HX"))
+                return watercoolerConnected ? 100 : 55;
+
+            // AMD Ryzen 9 7845HX
+            if (name.Contains("7845HX"))
+                return watercoolerConnected ? 90 : 55;
+
+            // AMD Ryzen 9 8945HS
+            if (name.Contains("8945HS"))
+                return 55;
+
+            // AMD Ryzen 9 894HS
+            if (name.Contains("894HS"))
+                return 40;
+
+            // AMD Ryzen 7 8845HS
+            if (name.Contains("8845HS"))
+                return 55;
+
+            // AMD Ryzen 7 8840HS
+            if (name.Contains("8840HS"))
+                return 55;
+
+            // AMD Ryzen 7 7840HS
+            if (name.Contains("7840HS"))
+                return 55;
+
+            // Generic AMD HX series
+            if (name.Contains("HX"))
+                return watercoolerConnected ? 80 : 55;
+
+            // Generic AMD HS series
+            if (name.Contains("HS"))
+                return 40;
+
+            // Generic AMD U series
+            if (name.Contains("U ") || name.EndsWith("U"))
+                return 15;
+
+            // Unknown AMD mobile fallback
+            return 55;
+        }
         public static async void setCpuFamily()
         {
             try
@@ -88,6 +201,65 @@ namespace Universal_x86_Tuning_Utility.Scripts
                 {
                    CPUName = mo["Name"].ToString();
                 }
+
+                // Detect laptop/system model from Win32_ComputerSystem
+                try
+                {
+                    ManagementObjectSearcher modelSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT Model FROM Win32_ComputerSystem");
+                    foreach (ManagementObject mo in modelSearcher.Get())
+                    {
+                        LaptopModel = mo["Model"]?.ToString()?.Trim() ?? "";
+                    }
+                }
+                catch { /* WMI not available for model detection */ }
+
+                // Detect all GPUs: separate dedicated GPUs from integrated ones,
+                // then combine them as "dGPU / iGPU" for display.
+                try
+                {
+                    List<string> dedicatedGpus = new List<string>();
+                    List<string> integratedGpus = new List<string>();
+
+                    ManagementObjectSearcher gpuSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_VideoController");
+                    foreach (ManagementObject gpu in gpuSearcher.Get())
+                    {
+                        string gpuName = gpu["Name"]?.ToString()?.Trim() ?? "";
+                        if (string.IsNullOrEmpty(gpuName) || gpuName.Contains("Microsoft", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        bool isDedicated = false;
+
+                        // NVIDIA GPUs are always dedicated
+                        if (gpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ||
+                            gpuName.Contains("GeForce", StringComparison.OrdinalIgnoreCase) ||
+                            gpuName.Contains("Quadro", StringComparison.OrdinalIgnoreCase) ||
+                            gpuName.Contains("RTX", StringComparison.OrdinalIgnoreCase))
+                        {
+                            isDedicated = true;
+                        }
+                        // AMD: dedicated if it contains "RX" (Radeon RX series) or "Radeon Pro"
+                        else if (gpuName.Contains("Radeon RX", StringComparison.OrdinalIgnoreCase) ||
+                                 gpuName.Contains("Radeon Pro", StringComparison.OrdinalIgnoreCase))
+                        {
+                            isDedicated = true;
+                        }
+                        // AMD: integrated if it contains "Radeon" but not "RX" (e.g. Radeon 610M, Radeon Graphics)
+                        // Intel: always integrated
+
+                        if (isDedicated)
+                            dedicatedGpus.Add(gpuName);
+                        else
+                            integratedGpus.Add(gpuName);
+                    }
+
+                    // Build combined GPU string: "dGPU / iGPU" or just whichever exists
+                    var allGpus = new List<string>();
+                    allGpus.AddRange(dedicatedGpus);
+                    allGpus.AddRange(integratedGpus);
+
+                    GPUName = allGpus.Count > 0 ? string.Join(" / ", allGpus) : "";
+                }
+                catch { /* WMI not available for GPU detection */ }
             }
             catch (ManagementException e)
             {
