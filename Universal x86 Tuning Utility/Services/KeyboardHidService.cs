@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using Universal_x86_Tuning_Utility.Models;
 
 namespace Universal_x86_Tuning_Utility.Services
 {
@@ -65,6 +66,9 @@ namespace Universal_x86_Tuning_Utility.Services
 
         [DllImport("hid.dll", SetLastError = true)]
         private static extern bool HidD_SetFeature(SafeFileHandle handle, byte[] report, int length);
+
+        [DllImport("hid.dll", SetLastError = true)]
+        private static extern bool HidD_GetFeature(SafeFileHandle handle, byte[] report, int length);
 
         [DllImport("hid.dll", SetLastError = true)]
         private static extern bool HidD_GetPreparsedData(SafeFileHandle handle, out nint preparsedData);
@@ -323,6 +327,7 @@ namespace Universal_x86_Tuning_Utility.Services
 
         /// <summary>
         /// Turns on the keyboard backlight with the specified color and brightness.
+        /// Report format: 00 08 02 [effect] [speed] [brightness] 08 00 00
         /// </summary>
         public void TurnOn(byte r, byte g, byte b, int brightness)
         {
@@ -337,11 +342,11 @@ namespace Universal_x86_Tuning_Utility.Services
                 // Report 2: Set RGB color
                 SendReport(new byte[] { 0x00, CMD_SET_COLOR, (byte)ZoneKeyboard, 0x01, r, g, b, 0x00, 0x00 });
 
-                // Report 3: Set brightness and speed (speed=8 for keyboard)
-                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, 0x00, 0x01, 0x01, (byte)brightness, 0x00, 0x00, 0x00 });
+                // Report 3: Set brightness (effect=Static 0x01, speed=0x05 medium)
+                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, 0x00, 0x01, 0x05, (byte)brightness, 0x00, 0x00, 0x00 });
 
-                // Update Report 3 byte[2] to zone mask and byte[6] to speed
-                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, ZoneMaskKeyboard, 0x01, 0x01, (byte)brightness, 0x08, 0x00, 0x00 });
+                // Update Report 3 with zone mask
+                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, ZoneMaskKeyboard, 0x01, 0x05, (byte)brightness, 0x08, 0x00, 0x00 });
 
                 _color = (r, g, b);
                 _brightness = brightness;
@@ -382,6 +387,7 @@ namespace Universal_x86_Tuning_Utility.Services
 
         /// <summary>
         /// Updates the keyboard color and brightness without turning it off.
+        /// Report format: 00 08 02 [effect] [speed] [brightness] 08 00 00
         /// </summary>
         public void SetColor(byte r, byte g, byte b, int brightness)
         {
@@ -393,8 +399,8 @@ namespace Universal_x86_Tuning_Utility.Services
                 // Report 1: Set RGB color
                 SendReport(new byte[] { 0x00, CMD_SET_COLOR, (byte)ZoneKeyboard, 0x01, r, g, b, 0x00, 0x00 });
 
-                // Report 2: Set brightness and speed
-                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, ZoneMaskKeyboard, 0x01, 0x01, (byte)brightness, 0x08, 0x00, 0x00 });
+                // Report 2: Set brightness (effect=Static 0x01, speed=0x05 medium)
+                SendReport(new byte[] { 0x00, CMD_MODE_BRIGHTNESS, ZoneMaskKeyboard, 0x01, 0x05, (byte)brightness, 0x08, 0x00, 0x00 });
 
                 _color = (r, g, b);
                 _brightness = brightness;
@@ -449,6 +455,106 @@ namespace Universal_x86_Tuning_Utility.Services
             {
                 int error = Marshal.GetLastWin32Error();
                 DebugLog($"[KBD-HID] HidD_SetFeature failed (error {error}): {string.Join(", ", report.Select(b => $"0x{b:X2}"))}");
+            }
+        }
+
+        /// <summary>
+        /// Sets the keyboard lighting effect mode.
+        /// Sends a CMD_MODE_BRIGHTNESS (0x08) report with the effect in byte[3] and speed in byte[4].
+        /// Format: 00 08 02 [effect] [speed] [brightness] 08 00 00
+        /// Speed (byte[4]): 0x00 = fastest, 0x0B = frozen (effect active but no movement).
+        /// Higher value = slower animation.
+        /// </summary>
+        public void SetEffect(KeyboardEffect effect, byte speed = 5)
+        {
+            EnsureAvailable();
+
+            lock (_lock)
+            {
+                // Clamp speed to 0-0x0B range
+                byte clampedSpeed = (byte)Math.Clamp((int)speed, 0, 0x0B);
+
+                byte[] report = new byte[]
+                {
+                    0x00,                    // Report ID
+                    CMD_MODE_BRIGHTNESS,     // Command
+                    ZoneMaskKeyboard,        // Zone mask (keyboard)
+                    (byte)effect,            // Effect mode
+                    clampedSpeed,            // Speed: 0=fastest, 0x0B=frozen
+                    (byte)_brightness,       // Current brightness
+                    0x08,                    // Unknown constant
+                    0x00,                    // Reserved
+                    0x00                     // Reserved
+                };
+
+                SendReport(report);
+                DebugLog($"[KBD-HID] Effect set to {effect} (0x{(byte)effect:X2}) speed={clampedSpeed}");
+            }
+        }
+
+        /// <summary>
+        /// Sends up to 7 colors to the HID controller using CMD_SET_COLOR (0x14).
+        /// Each color is sent with an index (1-7) so multi-color effects can reference them.
+        /// Format per report: 00 14 00 [index] [R] [G] [B] 00 00
+        /// </summary>
+        public void SetMultiColor(IEnumerable<System.Windows.Media.Color> colors)
+        {
+            EnsureAvailable();
+
+            lock (_lock)
+            {
+                int index = 1;
+                foreach (var color in colors.Take(7))
+                {
+                    byte[] report = new byte[]
+                    {
+                        0x00,                       // Report ID
+                        CMD_SET_COLOR,              // Command
+                        (byte)ZoneKeyboard,         // Zone
+                        (byte)index,                // Color index (1-7)
+                        color.R, color.G, color.B,  // RGB
+                        0x00, 0x00                  // Reserved
+                    };
+                    SendReport(report);
+                    index++;
+                }
+                DebugLog($"[KBD-HID] Set {index - 1} multi-colors");
+            }
+        }
+
+        /// <summary>
+        /// Sends an arbitrary 9-byte feature report to the HID controller.
+        /// Use for testing/reverse-engineering effects.
+        /// </summary>
+        public void SendRawReport(byte[] report)
+        {
+            EnsureAvailable();
+            SendReport(report);
+        }
+
+        /// <summary>
+        /// Tries to read back the current feature report from the HID controller.
+        /// Returns null if the device doesn't support reading features.
+        /// </summary>
+        public byte[]? ReadFeatureReport(byte reportId)
+        {
+            EnsureAvailable();
+
+            lock (_lock)
+            {
+                byte[] buffer = new byte[FEATURE_REPORT_SIZE];
+                buffer[0] = reportId;
+
+                bool success = HidD_GetFeature(_keyboardHandle, buffer, buffer.Length);
+                if (success)
+                {
+                    DebugLog($"[KBD-HID] ReadFeatureReport(0x{reportId:X2}) = {string.Join(", ", buffer.Select(b => $"0x{b:X2}"))}");
+                    return buffer;
+                }
+
+                int error = Marshal.GetLastWin32Error();
+                DebugLog($"[KBD-HID] HidD_GetFeature failed (error {error}) for reportId 0x{reportId:X2}");
+                return null;
             }
         }
 
